@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="ASC.Business/ASC.Business.csproj" Id="ef16ecf8-5ce5-47b3-8116-8bbb72bce5e3" />
+  <Project Path="ASC.DataAccess/ASC.DataAccess.csproj" Id="faceb5a1-4d77-4cb7-b57c-786ce1f07277" />
+  <Project Path="ASC.Model/ASC.Model.csproj" Id="201831e6-4748-41e5-a5dd-ddcd97a57053" />
+  <Project Path="ASC.Tests/ASC.Tests.csproj" Id="65d2a5ca-e1ae-470f-ac0e-4a353ceb73b2" />
+  <Project Path="ASC.Utilities/ASC.Utilities.csproj" Id="d1389ff3-9ad3-4d4c-b49d-1aa62db26a1c" />
+  <Project Path="ASC.WebHuyThuanPhuoc/ASC.WebHuyThuanPhuoc.csproj" />
+</Solution>
