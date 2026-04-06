@@ -1,0 +1,75 @@
+﻿@model ASC.WebHuyThuanPhuoc.Models.NavigationModel
+
+<ul id="nav-mobile" class="sidenav sidenav-fixed">
+    <li>
+        <div class="user-view">
+            <div class="background blue-grey lighten-1"></div>
+            <a href="#!user"><img class="circle" src="~/images/male.png" /></a>
+            <a href="#!name"><span class="white-text name">@User.Identity?.Name</span></a>
+            <a href="#!email"><span class="white-text email">@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value</span></a>
+        </div>
+    </li>
+
+    @foreach (var item in Model.MenuItems)
+    {
+        if (!item.IsNested)
+        {
+            if (item.DisplayName == "Logout")
+            {
+                <li>
+                    <a class="collapsible-header" href="#!" id="ancrLogout">
+                        <i class="material-icons">@item.MaterialIcon</i>
+                        @item.DisplayName
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li>
+                    <a class="collapsible-header" href="@item.Link">
+                        <i class="material-icons">@item.MaterialIcon</i>
+                        @item.DisplayName
+                    </a>
+                </li>
+            }
+        }
+        else
+        {
+            <li>
+                <ul class="collapsible collapsible-accordion">
+                    <li>
+                        <a class="collapsible-header">
+                            @item.DisplayName
+                            <i class="material-icons">@item.MaterialIcon</i>
+                        </a>
+                        <div class="collapsible-body">
+                            <ul>
+                                @foreach (var nested in item.NestedItems)
+                                {
+                                    if (nested.DisplayName == "Reset Password")
+                                    {
+                                        <li>
+                                            <a href="#!" id="ancrResetPassword">
+                                                @nested.DisplayName
+                                                <i class="material-icons">@nested.MaterialIcon</i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <a href="@nested.Link">
+                                                @nested.DisplayName
+                                                <i class="material-icons">@nested.MaterialIcon</i>
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+        }
+    }
+</ul>

@@ -2,7 +2,6 @@
 using System.Reflection.Emit;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using ASC.Model.Models;
 
 namespace ASC.WebHuyThuanPhuoc.Data
 {

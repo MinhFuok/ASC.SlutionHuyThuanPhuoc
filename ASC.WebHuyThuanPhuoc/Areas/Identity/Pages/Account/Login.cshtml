@@ -1,0 +1,57 @@
+﻿@page
+@model ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Log in";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="section">
+        <div class="row">
+            <div class="col s12 m8 offset-m2 l6 offset-l3">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Login</span>
+
+                        <form id="account" method="post">
+                            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+                            <div class="input-field">
+                                <input asp-for="Input.Email" />
+                                <label asp-for="Input.Email"></label>
+                                <span asp-validation-for="Input.Email" class="red-text"></span>
+                            </div>
+
+                            <div class="input-field">
+                                <input asp-for="Input.Password" />
+                                <label asp-for="Input.Password"></label>
+                                <span asp-validation-for="Input.Password" class="red-text"></span>
+                            </div>
+
+                            <p>
+                                <label>
+                                    <input asp-for="Input.RememberMe" type="checkbox" />
+                                    <span>@Html.DisplayNameFor(m => m.Input.RememberMe)</span>
+                                </label>
+                            </p>
+
+                            <div class="section">
+                                <button type="submit" class="btn waves-effect waves-light teal">
+                                    Log in
+                                </button>
+                            </div>
+
+                            <p>
+                                <a asp-page="./ForgotPassword">Forgot your password?</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

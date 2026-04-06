@@ -2,18 +2,21 @@
 {
     public class ApplicationSettings
     {
-        public string ApplicationTitle { get; set; }
-        public string AdminEmail { get; set; }
-        public string AdminName { get; set; }
-        public string AdminPassword { get; set; }
-        public string Roles { get; set; }
-        public string EngineerEmail { get; set; }
-        public string EngineerName { get; set; }
-        public string EngineerPassword { get; set; }
+        public string ApplicationTitle { get; set; } = string.Empty;
 
-        public string SMTPServer { get; set; }
+        public string AdminEmail { get; set; } = string.Empty;
+        public string AdminName { get; set; } = string.Empty;
+        public string AdminPassword { get; set; } = string.Empty;
+
+        public string Roles { get; set; } = string.Empty;
+
+        public string EngineerEmail { get; set; } = string.Empty;
+        public string EngineerName { get; set; } = string.Empty;
+        public string EngineerPassword { get; set; } = string.Empty;
+
+        public string SMTPServer { get; set; } = string.Empty;
         public int SMTPPort { get; set; }
-        public string SMTPAccount { get; set; }
-        public string SMTPPassword { get; set; }
+        public string SMTPAccount { get; set; } = string.Empty;
+        public string SMTPPassword { get; set; } = string.Empty;
     }
 }

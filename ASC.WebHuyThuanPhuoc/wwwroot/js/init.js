@@ -1,8 +1,26 @@
-(function($){
-  $(function(){
+(function ($) {
+    $(function () {
+        $('.sidenav').sidenav();
+        $('.parallax').parallax();
+        $('.collapsible').collapsible();
+    });
+})(jQuery);
 
-    $('.sidenav').sidenav();
-    $('.parallax').parallax();
+window.history.forward();
 
-  }); // end of document ready
-})(jQuery); // end of jQuery name space
+function noBack() {
+    window.history.forward();
+}
+
+window.onload = noBack;
+window.onpageshow = function (evt) {
+    if (evt.persisted) {
+        noBack();
+    }
+};
+
+window.onunload = function () { };
+
+document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+});
