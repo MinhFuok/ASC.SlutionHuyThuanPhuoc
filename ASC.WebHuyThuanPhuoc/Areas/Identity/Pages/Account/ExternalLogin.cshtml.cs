@@ -9,10 +9,11 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using ASC.Model.BaseTypes;
+using ASC.WebHuyThuanPhuoc.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -98,7 +99,7 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnGetCallbackAsync(string returnUrl = null, string remoteError = null)
         {
-            returnUrl = returnUrl ?? Url.Content("~/");
+            returnUrl = returnUrl ?? Url.Content("~/ServiceRequests/Dashboard/Dashboard");
             if (remoteError != null)
             {
                 ErrorMessage = $"Error from external provider: {remoteError}";
@@ -112,6 +113,13 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
             }
 
             // Sign in the user with this external login provider if the user already has a login.
+            var existingLoginUser = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (existingLoginUser != null && !await IsActiveUserAsync(existingLoginUser))
+            {
+                ErrorMessage = "Your account has been deactivated.";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
+
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
@@ -140,7 +148,7 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostConfirmationAsync(string returnUrl = null)
         {
-            returnUrl = returnUrl ?? Url.Content("~/");
+            returnUrl = returnUrl ?? Url.Content("~/ServiceRequests/Dashboard/Dashboard");
             // Get the information about the user from the external login provider
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
@@ -151,39 +159,38 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                var existingUser = await _userManager.FindByEmailAsync(Input.Email);
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError(nameof(Input.Email), $"Email '{Input.Email}' is already taken.");
+                    ProviderDisplayName = info.ProviderDisplayName;
+                    ReturnUrl = returnUrl;
+                    return Page();
+                }
+
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                user.EmailConfirmed = true;
 
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
-                    result = await _userManager.AddLoginAsync(user, info);
+                    await AddOrReplaceClaimAsync(user, ClaimTypes.Email, Input.Email);
+                    await AddOrReplaceClaimAsync(user, "IsActive", bool.TrueString);
+
+                    result = await _userManager.AddToRoleAsync(user, Roles.User.ToString());
                     if (result.Succeeded)
                     {
-                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-
-                        var userId = await _userManager.GetUserIdAsync(user);
-                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                        var callbackUrl = Url.Page(
-                            "/Account/ConfirmEmail",
-                            pageHandler: null,
-                            values: new { area = "Identity", userId = userId, code = code },
-                            protocol: Request.Scheme);
-
-                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                        // If account confirmation is required, we need to show the link if we don't have a real email sender
-                        if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                        result = await _userManager.AddLoginAsync(user, info);
+                        if (result.Succeeded)
                         {
-                            return RedirectToPage("./RegisterConfirmation", new { Email = Input.Email });
-                        }
+                            _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
-                        await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                        return LocalRedirect(returnUrl);
+                            await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
+                            return LocalRedirect(returnUrl);
+                        }
                     }
                 }
                 foreach (var error in result.Errors)
@@ -218,6 +225,26 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
             return (IUserEmailStore<IdentityUser>)_userStore;
+        }
+
+        private async Task AddOrReplaceClaimAsync(IdentityUser user, string type, string value)
+        {
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var claim in claims.Where(c => c.Type == type))
+            {
+                await _userManager.RemoveClaimAsync(user, claim);
+            }
+
+            await _userManager.AddClaimAsync(user, new Claim(type, value));
+        }
+
+        private async Task<bool> IsActiveUserAsync(IdentityUser user)
+        {
+            var claims = await _userManager.GetClaimsAsync(user);
+            var isActiveClaim = claims.FirstOrDefault(c => c.Type == "IsActive");
+
+            return isActiveClaim == null ||
+                bool.TryParse(isActiveClaim.Value, out var isActive) && isActive;
         }
     }
 }

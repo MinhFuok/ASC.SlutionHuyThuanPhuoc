@@ -26,6 +26,7 @@ namespace ASC.WebHuyThuanPhuoc.Configuration
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = false;
+                options.User.RequireUniqueEmail = true;
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
@@ -41,6 +42,22 @@ namespace ASC.WebHuyThuanPhuoc.Configuration
                 options.LogoutPath = "/Identity/Account/Logout";
                 options.AccessDeniedPath = "/Identity/Account/Login";
             });
+
+            var googleIdentitySection = configuration.GetSection("Authentication:Google:Identity");
+            var googleClientId = googleIdentitySection["ClientId"];
+            var googleClientSecret = googleIdentitySection["ClientSecret"];
+
+            if (!string.IsNullOrWhiteSpace(googleClientId) &&
+                !string.IsNullOrWhiteSpace(googleClientSecret))
+            {
+                services.AddAuthentication()
+                    .AddGoogle(options =>
+                    {
+                        options.ClientId = googleClientId;
+                        options.ClientSecret = googleClientSecret;
+                        options.CallbackPath = "/signin-google";
+                    });
+            }
 
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();

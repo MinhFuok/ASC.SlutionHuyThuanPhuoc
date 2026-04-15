@@ -1,0 +1,110 @@
+@model CustomerViewModel
+@{
+    ViewData["Title"] = "Customers";
+    Layout = "~/Views/Shared/_SecureLayout.cshtml";
+}
+
+<div class="section">
+    <h5>Users</h5>
+
+    <table id="customersTable" class="striped responsive-table account-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Is Active</th>
+                <th>Edit User</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in Model.Customers)
+            {
+                <tr>
+                    <td>@customer.Email</td>
+                    <td>@customer.UserName</td>
+                    <td>
+                        @if (customer.IsActive)
+                        {
+                            <i class="material-icons green-text">check</i>
+                        }
+                        else
+                        {
+                            <i class="material-icons red-text">close</i>
+                        }
+                    </td>
+                    <td>
+                        <a href="#customerForm"
+                           class="edit-customer"
+                           data-email="@customer.Email"
+                           data-username="@customer.UserName"
+                           data-isactive="@customer.IsActive.ToString().ToLowerInvariant()">
+                            <i class="material-icons">edit</i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="section" id="customerForm">
+    <h5>Customer Details</h5>
+
+    <form asp-area="Accounts" asp-controller="Account" asp-action="Customers" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <input asp-for="Registration.IsEdit" type="hidden" />
+        <input asp-for="Registration.UserName" type="hidden" />
+
+        <div class="row">
+            <div class="input-field col s12 m6">
+                <input asp-for="Registration.Email" readonly />
+                <label asp-for="Registration.Email"></label>
+                <span asp-validation-for="Registration.Email" class="red-text"></span>
+            </div>
+
+            <div class="col s12 m3 account-checkbox">
+                <label>
+                    <input asp-for="Registration.IsActive" type="checkbox" />
+                    <span>Is Active</span>
+                </label>
+            </div>
+
+            <div class="input-field col s12 m3 right-align">
+                <button class="btn waves-effect waves-light teal" type="submit">
+                    Save
+                    <i class="material-icons right">send</i>
+                </button>
+                <button class="btn waves-effect waves-light red lighten-1" type="button" id="resetCustomerForm">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('#customersTable').DataTable();
+
+            $('#customersTable').on('click', '.edit-customer', function (event) {
+                event.preventDefault();
+                $('#Registration_IsEdit').val('true');
+                $('#Registration_Email').val($(this).data('email'));
+                $('#Registration_UserName').val($(this).data('username'));
+                $('#Registration_IsActive').prop('checked', $(this).data('isactive') === true);
+                M.updateTextFields();
+            });
+
+            $('#resetCustomerForm').on('click', function () {
+                $('#Registration_IsEdit').val('false');
+                $('#Registration_Email').val('');
+                $('#Registration_UserName').val('');
+                $('#Registration_IsActive').prop('checked', false);
+                M.updateTextFields();
+            });
+        });
+    </script>
+}

@@ -1,0 +1,36 @@
+@model ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+    Layout = "~/Views/Shared/_SecureLayout.cshtml";
+}
+
+<div class="section">
+    <h5>Profile</h5>
+
+    <form asp-area="Accounts" asp-controller="Account" asp-action="Profile" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <div class="row">
+            <div class="input-field col s12 m6">
+                <input asp-for="UserName" />
+                <label asp-for="UserName"></label>
+                <span asp-validation-for="UserName" class="red-text"></span>
+            </div>
+
+            <div class="input-field col s12 m6 right-align">
+                <button class="btn waves-effect waves-light teal" type="submit">
+                    Save
+                    <i class="material-icons right">send</i>
+                </button>
+                <button class="btn waves-effect waves-light red lighten-1" type="reset">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

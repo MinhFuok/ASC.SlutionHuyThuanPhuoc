@@ -53,7 +53,7 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
 
-            returnUrl ??= Url.Content("~/");
+            returnUrl ??= Url.Content("~/ServiceRequests/Dashboard/Dashboard");
 
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -78,6 +78,12 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
+            }
+
+            if (!await IsActiveUserAsync(user))
+            {
+                ModelState.AddModelError(string.Empty, "Your account has been deactivated.");
                 return Page();
             }
 
@@ -110,6 +116,15 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
 
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
+        }
+
+        private async Task<bool> IsActiveUserAsync(IdentityUser user)
+        {
+            var claims = await _userManager.GetClaimsAsync(user);
+            var isActiveClaim = claims.FirstOrDefault(c => c.Type == "IsActive");
+
+            return isActiveClaim == null ||
+                bool.TryParse(isActiveClaim.Value, out var isActive) && isActive;
         }
     }
 }
