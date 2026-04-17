@@ -157,12 +157,36 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
+            var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(providerEmail))
+            {
+                ModelState.AddModelError("Input.Email", "Email claim was not returned by the external provider.");
+                ProviderDisplayName = info.ProviderDisplayName;
+                ReturnUrl = returnUrl;
+                return Page();
+            }
+
+            Input ??= new InputModel();
+            Input.Email = providerEmail;
+            ModelState.Remove("Input.Email");
+
             if (ModelState.IsValid)
             {
                 var existingUser = await _userManager.FindByEmailAsync(Input.Email);
                 if (existingUser != null)
                 {
-                    ModelState.AddModelError(nameof(Input.Email), $"Email '{Input.Email}' is already taken.");
+                    if (await _userManager.IsInRoleAsync(existingUser, Roles.Admin.ToString()) ||
+                        await _userManager.IsInRoleAsync(existingUser, Roles.Engineer.ToString()))
+                    {
+                        ModelState.AddModelError(
+                            "Input.Email",
+                            "This email is already registered for an administrator or service engineer account.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Input.Email", $"Email '{Input.Email}' is already taken.");
+                    }
+
                     ProviderDisplayName = info.ProviderDisplayName;
                     ReturnUrl = returnUrl;
                     return Page();

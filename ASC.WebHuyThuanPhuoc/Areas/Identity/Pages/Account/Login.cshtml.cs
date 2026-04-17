@@ -96,7 +96,7 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
-                return LocalRedirect("/ServiceRequests/Dashboard/Dashboard");
+                return LocalRedirect(returnUrl);
             }
 
             if (result.RequiresTwoFactor)

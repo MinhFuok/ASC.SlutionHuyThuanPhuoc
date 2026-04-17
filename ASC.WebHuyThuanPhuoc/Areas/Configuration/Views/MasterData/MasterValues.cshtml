@@ -1,0 +1,227 @@
+@model MasterValuesViewModel
+@{
+    ViewData["Title"] = "Master Values";
+    Layout = "~/Views/Shared/_SecureLayout.cshtml";
+}
+
+<div class="section">
+    <h5>Master Values</h5>
+
+    <div class="row">
+        <div class="input-field col s12 m4">
+            <select id="masterValueFilter" asp-items="Model.MasterKeys">
+                <option value="">All Master Keys</option>
+            </select>
+            <label for="masterValueFilter">Master Key</label>
+        </div>
+    </div>
+
+    <table id="masterValuesTable" class="striped responsive-table account-table">
+        <thead>
+            <tr>
+                <th>Row Key</th>
+                <th>Partition Key</th>
+                <th>Name</th>
+                <th>Is Active</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var masterValue in Model.MasterValues)
+            {
+                <tr>
+                    <td>@masterValue.RowKey</td>
+                    <td>@masterValue.PartitionKey</td>
+                    <td>@masterValue.Name</td>
+                    <td>
+                        @if (masterValue.IsActive)
+                        {
+                            <i class="material-icons green-text">check</i>
+                        }
+                        else
+                        {
+                            <i class="material-icons red-text">close</i>
+                        }
+                    </td>
+                    <td>
+                        <a href="#masterValueForm"
+                           class="edit-master-value"
+                           data-rowkey="@masterValue.RowKey"
+                           data-partitionkey="@masterValue.PartitionKey"
+                           data-name="@masterValue.Name"
+                           data-isactive="@masterValue.IsActive.ToString().ToLowerInvariant()">
+                            <i class="material-icons">edit</i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="section" id="masterValueForm">
+    <h5>Master Value Details</h5>
+
+    <form asp-area="Configuration" asp-controller="MasterData" asp-action="MasterValues" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+        <input asp-for="IsEdit" type="hidden" />
+        <input asp-for="OriginalPartitionKey" type="hidden" />
+        <input asp-for="OriginalRowKey" type="hidden" />
+        <input asp-for="MasterValueInContext.RowKey" type="hidden" />
+
+        <div class="row">
+            <div class="input-field col s12 m3">
+                <input id="MasterValueRowKeyDisplay" value="@Model.MasterValueInContext.RowKey" readonly />
+                <label for="MasterValueRowKeyDisplay" class="active">Row Key</label>
+            </div>
+
+            <div class="input-field col s12 m3">
+                <select asp-for="MasterValueInContext.PartitionKey" asp-items="Model.MasterKeys">
+                    <option value="" disabled selected>Select a master key</option>
+                </select>
+                <label asp-for="MasterValueInContext.PartitionKey"></label>
+                <span asp-validation-for="MasterValueInContext.PartitionKey" class="red-text"></span>
+            </div>
+
+            <div class="input-field col s12 m3">
+                <input asp-for="MasterValueInContext.Name" />
+                <label asp-for="MasterValueInContext.Name"></label>
+                <span asp-validation-for="MasterValueInContext.Name" class="red-text"></span>
+            </div>
+
+            <div class="col s12 m3 account-checkbox">
+                <label>
+                    <input asp-for="MasterValueInContext.IsActive" type="checkbox" />
+                    <span>Is Active</span>
+                </label>
+            </div>
+
+            <div class="input-field col s12 right-align">
+                <button class="btn waves-effect waves-light teal" type="submit" id="saveMasterValueButton">
+                    Save
+                    <i class="material-icons right">send</i>
+                </button>
+                <button class="btn waves-effect waves-light red lighten-1" type="button" id="resetMasterValueForm">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="section">
+    <h5>Upload Excel</h5>
+    <p>The file must contain master values with columns: Partition Key, Name, Is Active.</p>
+
+    <div class="row">
+        <div class="file-field input-field col s12 m8">
+            <div class="btn blue-grey">
+                <span>File</span>
+                <input type="file" id="masterDataExcel" accept=".xlsx,.xls" />
+            </div>
+            <div class="file-path-wrapper">
+                <input class="file-path validate" type="text" placeholder="Upload one Excel file" />
+            </div>
+        </div>
+
+        <div class="input-field col s12 m4 right-align">
+            <button class="btn waves-effect waves-light teal" type="button" id="uploadMasterData">
+                Upload
+                <i class="material-icons right">file_upload</i>
+            </button>
+        </div>
+
+        <div class="col s12">
+            <div id="uploadProgress" class="progress hide">
+                <div class="indeterminate"></div>
+            </div>
+            <span id="uploadMessage" class="red-text"></span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('select').formSelect();
+
+            var table = $('#masterValuesTable').DataTable();
+
+            $('#masterValueFilter').on('change', function () {
+                table.column(1).search(this.value).draw();
+            });
+
+            $('#masterValuesTable').on('click', '.edit-master-value', function (event) {
+                event.preventDefault();
+
+                var partitionKey = $(this).data('partitionkey');
+                var rowKey = $(this).data('rowkey');
+
+                $('#IsEdit').val('true');
+                $('#OriginalPartitionKey').val(partitionKey);
+                $('#OriginalRowKey').val(rowKey);
+                $('#MasterValueInContext_RowKey').val(rowKey);
+                $('#MasterValueRowKeyDisplay').val(rowKey);
+                $('#MasterValueInContext_PartitionKey').val(partitionKey);
+                $('#MasterValueInContext_Name').val($(this).data('name'));
+                $('#MasterValueInContext_IsActive').prop('checked', $(this).data('isactive') === true);
+                $('label[for="MasterValueRowKeyDisplay"]').addClass('active');
+                $('select').formSelect();
+                M.updateTextFields();
+            });
+
+            $('#resetMasterValueForm').on('click', function () {
+                $('#IsEdit').val('false');
+                $('#OriginalPartitionKey').val('');
+                $('#OriginalRowKey').val('');
+                $('#MasterValueInContext_RowKey').val('');
+                $('#MasterValueRowKeyDisplay').val('');
+                $('#MasterValueInContext_PartitionKey').val('');
+                $('#MasterValueInContext_Name').val('');
+                $('#MasterValueInContext_IsActive').prop('checked', true);
+                $('label[for="MasterValueRowKeyDisplay"]').addClass('active');
+                $('select').formSelect();
+                M.updateTextFields();
+            });
+
+            $('#uploadMasterData').on('click', function () {
+                var files = $('#masterDataExcel').get(0).files;
+                if (!files.length) {
+                    $('#uploadMessage').text('Upload a file.');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('excelFile', files[0]);
+                formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').first().val());
+
+                $('#uploadMessage').text('');
+                $('#uploadProgress').removeClass('hide');
+
+                $.ajax({
+                    url: '@Url.Action("UploadExcel", "MasterData", new { area = "Configuration" })',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (message) {
+                        $('#uploadProgress').addClass('hide');
+
+                        if (message.success) {
+                            window.location.reload();
+                            return;
+                        }
+
+                        $('#uploadMessage').text(message.text || 'Upload failed.');
+                    },
+                    error: function () {
+                        $('#uploadProgress').addClass('hide');
+                        $('#uploadMessage').text('Upload failed.');
+                    }
+                });
+            });
+        });
+    </script>
+}

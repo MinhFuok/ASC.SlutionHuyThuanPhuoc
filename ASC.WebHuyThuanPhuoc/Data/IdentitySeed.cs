@@ -2,6 +2,7 @@
 using ASC.WebHuyThuanPhuoc.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 namespace ASC.Web.Data
 {
@@ -51,13 +52,12 @@ namespace ASC.Web.Data
                     throw new Exception(string.Join(" | ", result.Errors.Select(e => e.Description)));
                 }
 
-                await userManager.AddClaimAsync(user,
-                    new System.Security.Claims.Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", options.Value.AdminEmail));
-                await userManager.AddClaimAsync(user,
-                    new System.Security.Claims.Claim("IsActive", "True"));
-
-                await userManager.AddToRoleAsync(user, Roles.Admin.ToString());
+                admin = user;
             }
+
+            await EnsureClaimAsync(userManager, admin, ClaimTypes.Email, options.Value.AdminEmail);
+            await EnsureClaimAsync(userManager, admin, "IsActive", bool.TrueString);
+            await EnsureRoleAsync(userManager, admin, Roles.Admin.ToString());
 
             var engineer = await userManager.FindByEmailAsync(options.Value.EngineerEmail);
             if (engineer == null)
@@ -77,12 +77,54 @@ namespace ASC.Web.Data
                     throw new Exception(string.Join(" | ", result.Errors.Select(e => e.Description)));
                 }
 
-                await userManager.AddClaimAsync(user,
-                    new System.Security.Claims.Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", options.Value.EngineerEmail));
-                await userManager.AddClaimAsync(user,
-                    new System.Security.Claims.Claim("IsActive", "True"));
+                engineer = user;
+            }
 
-                await userManager.AddToRoleAsync(user, Roles.Engineer.ToString());
+            await EnsureClaimAsync(userManager, engineer, ClaimTypes.Email, options.Value.EngineerEmail);
+            await EnsureClaimAsync(userManager, engineer, "IsActive", bool.TrueString);
+            await EnsureRoleAsync(userManager, engineer, Roles.Engineer.ToString());
+        }
+
+        private static async Task EnsureClaimAsync(
+            UserManager<IdentityUser> userManager,
+            IdentityUser user,
+            string type,
+            string value)
+        {
+            var claims = await userManager.GetClaimsAsync(user);
+            var existingClaims = claims.Where(c => c.Type == type).ToList();
+
+            foreach (var claim in existingClaims.Where(c => c.Value != value))
+            {
+                await userManager.RemoveClaimAsync(user, claim);
+            }
+
+            if (existingClaims.Any(c => c.Value == value))
+            {
+                return;
+            }
+
+            var result = await userManager.AddClaimAsync(user, new Claim(type, value));
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(" | ", result.Errors.Select(e => e.Description)));
+            }
+        }
+
+        private static async Task EnsureRoleAsync(
+            UserManager<IdentityUser> userManager,
+            IdentityUser user,
+            string role)
+        {
+            if (await userManager.IsInRoleAsync(user, role))
+            {
+                return;
+            }
+
+            var result = await userManager.AddToRoleAsync(user, role);
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(" | ", result.Errors.Select(e => e.Description)));
             }
         }
     }
