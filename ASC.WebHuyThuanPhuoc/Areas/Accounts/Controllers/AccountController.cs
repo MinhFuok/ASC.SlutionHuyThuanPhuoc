@@ -70,6 +70,12 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Accounts.Controllers
                     return View(await BuildServiceEngineerViewModelAsync(registration));
                 }
 
+                if (!await _userManager.IsInRoleAsync(user, Roles.Engineer.ToString()))
+                {
+                    ModelState.AddModelError("Registration.Email", "Selected account is not a service engineer.");
+                    return View(await BuildServiceEngineerViewModelAsync(registration));
+                }
+
                 user.UserName = registration.UserName;
                 var updateResult = await _userManager.UpdateAsync(user);
                 if (!updateResult.Succeeded)
@@ -161,6 +167,12 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Accounts.Controllers
             if (user == null)
             {
                 ModelState.AddModelError("Registration.Email", "Customer account was not found.");
+                return View(await BuildCustomerViewModelAsync(registration));
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, Roles.User.ToString()))
+            {
+                ModelState.AddModelError("Registration.Email", "Selected account is not a customer.");
                 return View(await BuildCustomerViewModelAsync(registration));
             }
 
