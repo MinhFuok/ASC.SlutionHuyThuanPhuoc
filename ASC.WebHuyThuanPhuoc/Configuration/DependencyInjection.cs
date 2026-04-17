@@ -3,6 +3,10 @@ using ASC.WebHuyThuanPhuoc.Data;
 using ASC.WebHuyThuanPhuoc.Services;
 using ASC.WebHuyThuanPhuoc.Configuration;
 using ASC.WebHuyThuanPhuoc.Operations;
+using ASC.Business;
+using ASC.Business.Interfaces;
+using ASC.DataAccess;
+using ASC.WebHuyThuanPhuoc.Areas.Configuration.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -64,6 +68,9 @@ namespace ASC.WebHuyThuanPhuoc.Configuration
 
             services.AddSingleton<IIdentitySeed, IdentitySeed>();
             services.AddScoped<DbContext, ApplicationDbContext>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IMasterDataOperations, MasterDataOperations>();
+            services.AddAutoMapper(typeof(MappingProfile));
 
             services.AddMemoryCache();
             services.AddScoped<INavigationCacheOperations, NavigationCacheOperations>();
