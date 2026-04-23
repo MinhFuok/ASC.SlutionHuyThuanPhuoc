@@ -1,9 +1,9 @@
 using AutoMapper;
 using ASC.Business.Interfaces;
 using ASC.Model.Models;
+using ASC.Utilities;
 using ASC.WebHuyThuanPhuoc.Areas.Configuration.Models;
 using ASC.WebHuyThuanPhuoc.Controllers;
-using ASC.WebHuyThuanPhuoc.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

@@ -1,7 +1,6 @@
-using ASC.Utilities;
 using System.Security.Claims;
 
-namespace ASC.WebHuyThuanPhuoc.Extensions
+namespace ASC.Utilities
 {
     public static class ClaimsPrincipalExtensions
     {
