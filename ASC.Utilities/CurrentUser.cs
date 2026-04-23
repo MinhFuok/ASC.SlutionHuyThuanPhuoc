@@ -1,4 +1,4 @@
-﻿namespace ASC.WebHuyThuanPhuoc.Models
+namespace ASC.Utilities
 {
     public class CurrentUser
     {
