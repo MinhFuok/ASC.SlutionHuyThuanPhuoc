@@ -1,6 +1,6 @@
-﻿using ASC.WebHuyThuanPhuoc.Models;
+using ASC.WebHuyThuanPhuoc.Models;
 
-namespace ASC.WebHuyThuanPhuoc.Operations
+namespace ASC.WebHuyThuanPhuoc.Data
 {
     public interface INavigationCacheOperations
     {

@@ -1,19 +1,25 @@
-﻿using Microsoft.AspNetCore.Http;
+using System.Text;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace ASC.Utilities
 {
     public static class SessionExtensions
     {
-        public static void SetObjectAsJson(this ISession session, string key, object value)
+        public static void SetSession(this ISession session, string key, object value)
         {
-            session.SetString(key, JsonConvert.SerializeObject(value));
+            session.Set(key, Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(value)));
         }
 
-        public static T? GetObjectFromJson<T>(this ISession session, string key)
+        public static T? GetSession<T>(this ISession session, string key)
         {
-            var value = session.GetString(key);
-            return value == null ? default : JsonConvert.DeserializeObject<T>(value);
+            byte[]? value;
+            if (session.TryGetValue(key, out value) && value != null)
+            {
+                return JsonConvert.DeserializeObject<T>(Encoding.ASCII.GetString(value));
+            }
+
+            return default;
         }
     }
 }

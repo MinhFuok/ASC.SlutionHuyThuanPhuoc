@@ -1,8 +1,8 @@
-﻿using ASC.WebHuyThuanPhuoc.Models;
-using ASC.WebHuyThuanPhuoc.Operations;
+using ASC.WebHuyThuanPhuoc.Data;
+using ASC.WebHuyThuanPhuoc.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ASC.WebHuyThuanPhuoc.ViewComponents
+namespace ASC.WebHuyThuanPhuoc.Navigation
 {
     public class LeftNavigationViewComponent : ViewComponent
     {

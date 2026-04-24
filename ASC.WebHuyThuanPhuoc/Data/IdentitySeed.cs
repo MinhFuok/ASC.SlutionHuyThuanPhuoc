@@ -1,10 +1,10 @@
-﻿using ASC.Model.BaseTypes;
+using ASC.Model.BaseTypes;
 using ASC.WebHuyThuanPhuoc.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
-namespace ASC.Web.Data
+namespace ASC.WebHuyThuanPhuoc.Data
 {
     public class IdentitySeed : IIdentitySeed
     {

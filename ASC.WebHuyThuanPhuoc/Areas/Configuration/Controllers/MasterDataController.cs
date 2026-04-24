@@ -6,7 +6,6 @@ using ASC.WebHuyThuanPhuoc.Areas.Configuration.Models;
 using ASC.WebHuyThuanPhuoc.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using OfficeOpenXml;
 
 namespace ASC.WebHuyThuanPhuoc.Areas.Configuration.Controllers
@@ -27,47 +26,47 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Configuration.Controllers
         [HttpGet]
         public async Task<IActionResult> MasterKeys()
         {
-            return View(await BuildMasterKeysViewModelAsync(new MasterDataKeyViewModel
+            var masterkeys = await _masterData.GetAllMasterKeysAsync();
+            var masterkeysViewModel = _mapper.Map<List<MasterDataKey>, List<MasterDataKeyViewModel>>(masterkeys);
+
+            HttpContext.Session.SetSession("Masterkeys", masterkeysViewModel);
+
+            return View(new MasterKeysViewModel
             {
-                IsActive = true
-            }));
+                MasterKeys = masterkeysViewModel ?? new List<MasterDataKeyViewModel>(),
+                MasterKeyInContext = new MasterDataKeyViewModel(),
+                IsEdit = false
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MasterKeys(MasterKeysViewModel model)
         {
+            model.MasterKeys =
+                HttpContext.Session.GetSession<List<MasterDataKeyViewModel>>("Masterkeys") ??
+                new List<MasterDataKeyViewModel>();
+
             if (!ModelState.IsValid)
             {
-                return View(await BuildMasterKeysViewModelAsync(
-                    model.MasterKeyInContext,
-                    model.IsEdit));
+                return View(model);
             }
 
-            var masterKey = _mapper.Map<MasterDataKey>(model.MasterKeyInContext);
-            masterKey.UpdatedBy = CurrentUserName();
-
-            bool result;
+            var masterkey = _mapper.Map<MasterDataKeyViewModel, MasterDataKey>(model.MasterKeyInContext);
             if (model.IsEdit)
             {
-                result = await _masterData.UpdateMasterKeyAsync(
+                masterkey.UpdatedBy = CurrentUserName();
+                await _masterData.UpdateMasterKeyAsync(
                     model.MasterKeyInContext.PartitionKey ?? string.Empty,
-                    masterKey);
+                    masterkey);
             }
             else
             {
-                masterKey.RowKey = Guid.NewGuid().ToString();
-                masterKey.PartitionKey = model.MasterKeyInContext.Name;
-                masterKey.CreatedBy = CurrentUserName();
-                result = await _masterData.InsertMasterKeyAsync(masterKey);
-            }
-
-            if (!result)
-            {
-                ModelState.AddModelError(string.Empty, "Master key could not be saved. Check for duplicates.");
-                return View(await BuildMasterKeysViewModelAsync(
-                    model.MasterKeyInContext,
-                    model.IsEdit));
+                masterkey.RowKey = Guid.NewGuid().ToString();
+                masterkey.PartitionKey = masterkey.Name;
+                masterkey.CreatedBy = CurrentUserName();
+                masterkey.UpdatedBy = CurrentUserName();
+                await _masterData.InsertMasterKeyAsync(masterkey);
             }
 
             return RedirectToAction(nameof(MasterKeys));
@@ -76,22 +75,24 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Configuration.Controllers
         [HttpGet]
         public async Task<IActionResult> MasterValues()
         {
-            return View(await BuildMasterValuesViewModelAsync(new MasterDataValueViewModel
+            ViewBag.MasterKeys = await _masterData.GetAllMasterKeysAsync();
+
+            return View(new MasterValuesViewModel
             {
-                IsActive = true
-            }));
+                MasterValues = new List<MasterDataValueViewModel>(),
+                MasterValueInContext = new MasterDataValueViewModel(),
+                IsEdit = false
+            });
         }
 
         [HttpGet]
         public async Task<IActionResult> MasterValuesByKey(string? key)
         {
-            var masterValues = string.IsNullOrWhiteSpace(key)
-                ? await _masterData.GetAllMasterValuesAsync()
-                : await _masterData.GetAllMasterValuesByKeyAsync(key);
+            var mastervalues = await _masterData.GetAllMasterValuesByKeyAsync(key ?? string.Empty);
 
             return Json(new
             {
-                data = _mapper.Map<List<MasterDataValueViewModel>>(masterValues)
+                data = _mapper.Map<List<MasterDataValue>, List<MasterDataValueViewModel>>(mastervalues)
             });
         }
 
@@ -99,118 +100,33 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Configuration.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MasterValues(MasterValuesViewModel model)
         {
+            ViewBag.MasterKeys = await _masterData.GetAllMasterKeysAsync();
+
             if (!ModelState.IsValid)
             {
-                return View(await BuildMasterValuesViewModelAsync(
-                    model.MasterValueInContext,
-                    model.IsEdit,
-                    model.OriginalPartitionKey,
-                    model.OriginalRowKey));
+                model.MasterValues = _mapper.Map<List<MasterDataValue>, List<MasterDataValueViewModel>>(
+                    await _masterData.GetAllMasterValuesAsync());
+                return View(model);
             }
 
-            var masterValue = _mapper.Map<MasterDataValue>(model.MasterValueInContext);
-            masterValue.UpdatedBy = CurrentUserName();
-
-            bool result;
+            var masterDataValue = _mapper.Map<MasterDataValueViewModel, MasterDataValue>(model.MasterValueInContext);
             if (model.IsEdit)
             {
-                result = await _masterData.UpdateMasterValueAsync(
-                    model.OriginalPartitionKey ?? string.Empty,
-                    model.OriginalRowKey ?? string.Empty,
-                    masterValue);
+                masterDataValue.UpdatedBy = CurrentUserName();
+                await _masterData.UpdateMasterValueAsync(
+                    masterDataValue.PartitionKey,
+                    masterDataValue.RowKey ?? string.Empty,
+                    masterDataValue);
             }
             else
             {
-                masterValue.RowKey = Guid.NewGuid().ToString();
-                masterValue.CreatedBy = CurrentUserName();
-                result = await _masterData.InsertMasterValueAsync(masterValue);
-            }
-
-            if (!result)
-            {
-                ModelState.AddModelError(string.Empty, "Master value could not be saved. Check for duplicates.");
-                return View(await BuildMasterValuesViewModelAsync(
-                    model.MasterValueInContext,
-                    model.IsEdit,
-                    model.OriginalPartitionKey,
-                    model.OriginalRowKey));
+                masterDataValue.RowKey = Guid.NewGuid().ToString();
+                masterDataValue.CreatedBy = CurrentUserName();
+                masterDataValue.UpdatedBy = CurrentUserName();
+                await _masterData.InsertMasterValueAsync(masterDataValue);
             }
 
             return RedirectToAction(nameof(MasterValues));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadExcel()
-        {
-            var excelFile = Request.Form.Files.FirstOrDefault();
-            if (excelFile == null || excelFile.Length == 0)
-            {
-                return Json(new { success = false, text = "Upload a file." });
-            }
-
-            var masterData = await ParseMasterDataExcelAsync(excelFile);
-            if (masterData.Count == 0)
-            {
-                return Json(new { success = false, text = "No master data rows were found." });
-            }
-
-            foreach (var value in masterData)
-            {
-                value.CreatedBy = CurrentUserName();
-                value.UpdatedBy = CurrentUserName();
-            }
-
-            var result = await _masterData.UploadAllMasterDataAsync(masterData);
-            return Json(new { success = result, text = result ? "Upload completed." : "Upload failed." });
-        }
-
-        private async Task<MasterKeysViewModel> BuildMasterKeysViewModelAsync(
-            MasterDataKeyViewModel masterKeyInContext,
-            bool isEdit = false)
-        {
-            var masterKeys = await _masterData.GetAllMasterKeysAsync();
-
-            return new MasterKeysViewModel
-            {
-                MasterKeys = _mapper.Map<List<MasterDataKeyViewModel>>(masterKeys),
-                MasterKeyInContext = masterKeyInContext,
-                IsEdit = isEdit
-            };
-        }
-
-        private async Task<MasterValuesViewModel> BuildMasterValuesViewModelAsync(
-            MasterDataValueViewModel masterValueInContext,
-            bool isEdit = false,
-            string? originalPartitionKey = null,
-            string? originalRowKey = null)
-        {
-            var masterValues = await _masterData.GetAllMasterValuesAsync();
-
-            return new MasterValuesViewModel
-            {
-                MasterValues = _mapper.Map<List<MasterDataValueViewModel>>(masterValues),
-                MasterValueInContext = masterValueInContext,
-                MasterKeys = await BuildMasterKeySelectListAsync(),
-                OriginalPartitionKey = originalPartitionKey ?? masterValueInContext.PartitionKey,
-                OriginalRowKey = originalRowKey ?? masterValueInContext.RowKey,
-                IsEdit = isEdit
-            };
-        }
-
-        private async Task<List<SelectListItem>> BuildMasterKeySelectListAsync()
-        {
-            var masterKeys = await _masterData.GetAllMasterKeysAsync();
-
-            return masterKeys
-                .Where(key => key.IsActive)
-                .OrderBy(key => key.Name)
-                .Select(key => new SelectListItem
-                {
-                    Text = key.Name,
-                    Value = key.PartitionKey
-                })
-                .ToList();
         }
 
         private async Task<List<MasterDataValue>> ParseMasterDataExcelAsync(IFormFile excelFile)
@@ -223,40 +139,69 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Configuration.Controllers
 
             using var package = new ExcelPackage(memoryStream);
             var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-            var masterDataValues = new List<MasterDataValue>();
+            var masterValueList = new List<MasterDataValue>();
 
             if (worksheet?.Dimension == null)
             {
-                return masterDataValues;
+                return masterValueList;
             }
 
             for (var row = 2; row <= worksheet.Dimension.End.Row; row++)
             {
-                var partitionKey = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
-                var name = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
-
-                if (string.IsNullOrWhiteSpace(partitionKey) ||
-                    string.IsNullOrWhiteSpace(name))
+                masterValueList.Add(new MasterDataValue
                 {
-                    continue;
-                }
-
-                masterDataValues.Add(new MasterDataValue
-                {
-                    PartitionKey = partitionKey,
-                    Name = name,
+                    RowKey = Guid.NewGuid().ToString(),
+                    PartitionKey = worksheet.Cells[row, 1].Value?.ToString() ?? string.Empty,
+                    Name = worksheet.Cells[row, 2].Value?.ToString() ?? string.Empty,
                     IsActive = ParseBoolean(worksheet.Cells[row, 3].Value)
                 });
             }
 
-            return masterDataValues;
+            return masterValueList;
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadExcel()
+        {
+            var files = Request.Form.Files;
+            if (!files.Any())
+            {
+                return Json(new { Error = true, Text = "Upload a file" });
+            }
+
+            var excelFile = files.First();
+            if (excelFile.Length <= 0)
+            {
+                return Json(new { Error = true, Text = "Upload a file" });
+            }
+
+            var masterData = await ParseMasterDataExcelAsync(excelFile);
+            foreach (var masterDataValue in masterData)
+            {
+                masterDataValue.CreatedBy = CurrentUserName();
+                masterDataValue.UpdatedBy = CurrentUserName();
+            }
+
+            var result = await _masterData.UploadAllMasterDataAsync(masterData);
+            return Json(new { Success = result });
         }
 
         private string CurrentUserName()
         {
-            return User.GetCurrentUser().UserName ??
-                User.GetCurrentUser().Email ??
-                "system";
+            var currentUser = User.GetCurrentUserDetails();
+
+            if (!string.IsNullOrWhiteSpace(currentUser.Name))
+            {
+                return currentUser.Name;
+            }
+
+            if (!string.IsNullOrWhiteSpace(currentUser.Email))
+            {
+                return currentUser.Email;
+            }
+
+            return "system";
         }
 
         private static bool ParseBoolean(object? value)

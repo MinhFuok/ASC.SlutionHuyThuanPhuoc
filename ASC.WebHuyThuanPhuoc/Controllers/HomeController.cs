@@ -22,10 +22,7 @@ namespace ASC.WebHuyThuanPhuoc.Controllers
         public IActionResult Index()
         {
             ViewBag.Title = _settings.Value.ApplicationTitle;
-            HttpContext.Session.SetString("msg", "hello");
-            var value = HttpContext.Session.GetString("msg");
-            var model = new object();
-            return View(model);
+            return View();
         }
 
         public IActionResult Privacy()

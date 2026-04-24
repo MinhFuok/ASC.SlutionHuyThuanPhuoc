@@ -5,7 +5,7 @@ namespace ASC.Business.Interfaces
     public interface IMasterDataOperations
     {
         Task<List<MasterDataKey>> GetAllMasterKeysAsync();
-        Task<List<MasterDataKey>> GetMasterKeyByNameAsync(string name);
+        Task<List<MasterDataKey>> GetMasterKeysByNameAsync(string name);
         Task<bool> InsertMasterKeyAsync(MasterDataKey key);
         Task<bool> UpdateMasterKeyAsync(string originalPartitionKey, MasterDataKey key);
 

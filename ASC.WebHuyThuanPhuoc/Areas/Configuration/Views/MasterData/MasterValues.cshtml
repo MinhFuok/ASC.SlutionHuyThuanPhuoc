@@ -1,7 +1,14 @@
 @model MasterValuesViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Master Values";
     Layout = "~/Views/Shared/_SecureLayout.cshtml";
+    var masterKeyFilterSelectList = new SelectList(ViewBag.MasterKeys, "PartitionKey", "Name");
+    var masterValueSelectList = new SelectList(
+        ViewBag.MasterKeys,
+        "PartitionKey",
+        "Name",
+        Model.MasterValueInContext.PartitionKey);
 }
 
 <div class="section">
@@ -9,7 +16,7 @@
 
     <div class="row">
         <div class="input-field col s12 m4">
-            <select id="masterValueFilter" asp-items="Model.MasterKeys">
+            <select id="masterValueFilter" asp-items="masterKeyFilterSelectList">
                 <option value="">All Master Keys</option>
             </select>
             <label for="masterValueFilter">Master Key</label>
@@ -26,48 +33,21 @@
                 <th>Edit</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var masterValue in Model.MasterValues)
-            {
-                <tr>
-                    <td>@masterValue.RowKey</td>
-                    <td>@masterValue.PartitionKey</td>
-                    <td>@masterValue.Name</td>
-                    <td>
-                        @if (masterValue.IsActive)
-                        {
-                            <i class="material-icons green-text">check</i>
-                        }
-                        else
-                        {
-                            <i class="material-icons red-text">close</i>
-                        }
-                    </td>
-                    <td>
-                        <a href="#masterValueForm"
-                           class="edit-master-value"
-                           data-rowkey="@masterValue.RowKey"
-                           data-partitionkey="@masterValue.PartitionKey"
-                           data-name="@masterValue.Name"
-                           data-isactive="@masterValue.IsActive.ToString().ToLowerInvariant()">
-                            <i class="material-icons">edit</i>
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
+        <tbody></tbody>
     </table>
 </div>
 
 <div class="section" id="masterValueForm">
     <h5>Master Value Details</h5>
 
-    <form asp-area="Configuration" asp-controller="MasterData" asp-action="MasterValues" method="post">
+    <form asp-area="Configuration"
+          asp-controller="MasterData"
+          asp-action="MasterValues"
+          method="post"
+          id="masterValueDetailsForm">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="All" class="validation-summary-errors"></div>
         <input asp-for="IsEdit" type="hidden" />
-        <input asp-for="OriginalPartitionKey" type="hidden" />
-        <input asp-for="OriginalRowKey" type="hidden" />
         <input asp-for="MasterValueInContext.RowKey" type="hidden" />
 
         <div class="row">
@@ -77,7 +57,7 @@
             </div>
 
             <div class="input-field col s12 m3">
-                <select asp-for="MasterValueInContext.PartitionKey" asp-items="Model.MasterKeys">
+                <select asp-for="MasterValueInContext.PartitionKey" asp-items="masterValueSelectList">
                     <option value="" disabled selected>Select a master key</option>
                 </select>
                 <label asp-for="MasterValueInContext.PartitionKey"></label>
@@ -149,8 +129,79 @@
 
             var table = $('#masterValuesTable').DataTable();
 
+            function renderStatus(isActive) {
+                if (isActive) {
+                    return '<i class="material-icons green-text">check</i>';
+                }
+
+                return '<i class="material-icons red-text">close</i>';
+            }
+
+            function renderEdit(masterValue) {
+                return '<a href="#masterValueForm" class="edit-master-value"'
+                    + ' data-rowkey="' + (masterValue.rowKey || '') + '"'
+                    + ' data-partitionkey="' + (masterValue.partitionKey || '') + '"'
+                    + ' data-name="' + (masterValue.name || '') + '"'
+                    + ' data-isactive="' + masterValue.isActive + '">'
+                    + '<i class="material-icons">edit</i>'
+                    + '</a>';
+            }
+
+            function refreshSelects() {
+                $('select').formSelect();
+                M.updateTextFields();
+            }
+
+            function clearPartitionKeyEditMode() {
+                $('#masterValuePartitionKeyHidden').remove();
+                $('#MasterValueInContext_PartitionKey').prop('disabled', false);
+                refreshSelects();
+            }
+
+            function setPartitionKeyEditMode(partitionKey) {
+                $('#masterValuePartitionKeyHidden').remove();
+                $('<input />', {
+                    type: 'hidden',
+                    id: 'masterValuePartitionKeyHidden',
+                    name: 'MasterValueInContext.PartitionKey',
+                    value: partitionKey
+                }).appendTo('#masterValueDetailsForm');
+
+                $('#MasterValueInContext_PartitionKey').prop('disabled', true);
+                refreshSelects();
+            }
+
+            function resetForm() {
+                $('#IsEdit').val('false');
+                $('#MasterValueInContext_RowKey').val('');
+                $('#MasterValueRowKeyDisplay').val('');
+                $('#MasterValueInContext_PartitionKey').val('');
+                $('#MasterValueInContext_Name').val('');
+                $('#MasterValueInContext_IsActive').prop('checked', true);
+                $('label[for="MasterValueRowKeyDisplay"]').addClass('active');
+                clearPartitionKeyEditMode();
+            }
+
+            function loadMasterValues(key) {
+                $.get('@Url.Action("MasterValuesByKey", "MasterData", new { area = "Configuration" })', { key: key }, function (message) {
+                    table.clear();
+
+                    $.each(message.data || [], function (_, masterValue) {
+                        table.row.add([
+                            masterValue.rowKey || '',
+                            masterValue.partitionKey || '',
+                            masterValue.name || '',
+                            renderStatus(masterValue.isActive),
+                            renderEdit(masterValue)
+                        ]);
+                    });
+
+                    table.draw();
+                });
+            }
+
             $('#masterValueFilter').on('change', function () {
-                table.column(1).search(this.value).draw();
+                loadMasterValues(this.value || '');
             });
 
             $('#masterValuesTable').on('click', '.edit-master-value', function (event) {
@@ -160,30 +211,17 @@
                 var rowKey = $(this).data('rowkey');
 
                 $('#IsEdit').val('true');
-                $('#OriginalPartitionKey').val(partitionKey);
-                $('#OriginalRowKey').val(rowKey);
                 $('#MasterValueInContext_RowKey').val(rowKey);
                 $('#MasterValueRowKeyDisplay').val(rowKey);
                 $('#MasterValueInContext_PartitionKey').val(partitionKey);
                 $('#MasterValueInContext_Name').val($(this).data('name'));
                 $('#MasterValueInContext_IsActive').prop('checked', $(this).data('isactive') === true);
                 $('label[for="MasterValueRowKeyDisplay"]').addClass('active');
-                $('select').formSelect();
-                M.updateTextFields();
+                setPartitionKeyEditMode(partitionKey);
             });
 
             $('#resetMasterValueForm').on('click', function () {
-                $('#IsEdit').val('false');
-                $('#OriginalPartitionKey').val('');
-                $('#OriginalRowKey').val('');
-                $('#MasterValueInContext_RowKey').val('');
-                $('#MasterValueRowKeyDisplay').val('');
-                $('#MasterValueInContext_PartitionKey').val('');
-                $('#MasterValueInContext_Name').val('');
-                $('#MasterValueInContext_IsActive').prop('checked', true);
-                $('label[for="MasterValueRowKeyDisplay"]').addClass('active');
-                $('select').formSelect();
-                M.updateTextFields();
+                resetForm();
             });
 
             $('#uploadMasterData').on('click', function () {
@@ -209,12 +247,12 @@
                     success: function (message) {
                         $('#uploadProgress').addClass('hide');
 
-                        if (message.success) {
+                        if (message.Success) {
                             window.location.reload();
                             return;
                         }
 
-                        $('#uploadMessage').text(message.text || 'Upload failed.');
+                        $('#uploadMessage').text(message.Text || 'Upload failed.');
                     },
                     error: function () {
                         $('#uploadProgress').addClass('hide');
@@ -222,6 +260,24 @@
                     }
                 });
             });
+
+            if ($('#MasterValueInContext_RowKey').val()
+                || $('#MasterValueInContext_PartitionKey').val()
+                || $('#MasterValueInContext_Name').val()) {
+                $('#MasterValueRowKeyDisplay').val($('#MasterValueInContext_RowKey').val());
+                $('label[for="MasterValueRowKeyDisplay"]').addClass('active');
+
+                if ($('#IsEdit').val() === 'true') {
+                    setPartitionKeyEditMode($('#MasterValueInContext_PartitionKey').val());
+                } else {
+                    clearPartitionKeyEditMode();
+                    refreshSelects();
+                }
+            } else {
+                resetForm();
+            }
+
+            loadMasterValues('');
         });
     </script>
 }

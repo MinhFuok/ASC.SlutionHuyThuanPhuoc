@@ -1,8 +1,8 @@
-﻿using ASC.WebHuyThuanPhuoc.Models;
+using ASC.WebHuyThuanPhuoc.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
-namespace ASC.WebHuyThuanPhuoc.Operations
+namespace ASC.WebHuyThuanPhuoc.Data
 {
     public class NavigationCacheOperations : INavigationCacheOperations
     {
@@ -20,7 +20,7 @@ namespace ASC.WebHuyThuanPhuoc.Operations
 
         public async Task SetMenuItemsToCacheAsync()
         {
-            var filePath = Path.Combine(_environment.ContentRootPath, "Navigation.json");
+            var filePath = Path.Combine(_environment.ContentRootPath, "Navigation", "Navigation.json");
 
             if (!File.Exists(filePath))
             {

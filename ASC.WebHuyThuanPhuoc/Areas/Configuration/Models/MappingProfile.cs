@@ -7,8 +7,10 @@ namespace ASC.WebHuyThuanPhuoc.Areas.Configuration.Models
     {
         public MappingProfile()
         {
-            CreateMap<MasterDataKey, MasterDataKeyViewModel>().ReverseMap();
-            CreateMap<MasterDataValue, MasterDataValueViewModel>().ReverseMap();
+            CreateMap<MasterDataKey, MasterDataKeyViewModel>();
+            CreateMap<MasterDataKeyViewModel, MasterDataKey>();
+            CreateMap<MasterDataValue, MasterDataValueViewModel>();
+            CreateMap<MasterDataValueViewModel, MasterDataValue>();
         }
     }
 }

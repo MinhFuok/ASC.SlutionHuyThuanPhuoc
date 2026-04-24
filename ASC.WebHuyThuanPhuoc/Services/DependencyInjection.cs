@@ -1,41 +1,30 @@
-﻿using ASC.Web.Data;
-using ASC.WebHuyThuanPhuoc.Data;
-using ASC.WebHuyThuanPhuoc.Services;
-using ASC.WebHuyThuanPhuoc.Configuration;
-using ASC.WebHuyThuanPhuoc.Operations;
 using ASC.Business;
 using ASC.Business.Interfaces;
 using ASC.DataAccess;
-using ASC.WebHuyThuanPhuoc.Areas.Configuration.Models;
+using ASC.WebHuyThuanPhuoc.Configuration;
+using ASC.WebHuyThuanPhuoc.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
-namespace ASC.WebHuyThuanPhuoc.Configuration
+namespace ASC.WebHuyThuanPhuoc.Services
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddMyDependencyGroup(
-            this IServiceCollection services,
-            IConfiguration configuration)
+        public static IServiceCollection AddConfig(this IServiceCollection services, IConfiguration config)
         {
-            services.AddOptions();
-
-            services.Configure<ApplicationSettings>(
-                configuration.GetSection("AppSettings"));
+            var connectionString = config.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(connectionString));
+
+            services.AddOptions();
+            services.Configure<ApplicationSettings>(config.GetSection("AppSettings"));
 
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
-                options.SignIn.RequireConfirmedAccount = false;
                 options.User.RequireUniqueEmail = true;
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = true;
-                options.Password.RequiredLength = 6;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
@@ -47,14 +36,15 @@ namespace ASC.WebHuyThuanPhuoc.Configuration
                 options.AccessDeniedPath = "/Identity/Account/Login";
             });
 
-            var googleIdentitySection = configuration.GetSection("Authentication:Google:Identity");
+            var googleIdentitySection = config.GetSection("Authentication:Google:Identity");
             var googleClientId = googleIdentitySection["ClientId"];
             var googleClientSecret = googleIdentitySection["ClientSecret"];
 
             if (!string.IsNullOrWhiteSpace(googleClientId) &&
                 !string.IsNullOrWhiteSpace(googleClientSecret))
             {
-                services.AddAuthentication()
+                services
+                    .AddAuthentication()
                     .AddGoogle(options =>
                     {
                         options.ClientId = googleClientId;
@@ -63,24 +53,31 @@ namespace ASC.WebHuyThuanPhuoc.Configuration
                     });
             }
 
+            return services;
+        }
+
+        public static IServiceCollection AddMyDependencyGroup(this IServiceCollection services)
+        {
+            services.AddControllersWithViews();
+            services.AddRazorPages();
+
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
 
             services.AddSingleton<IIdentitySeed, IdentitySeed>();
             services.AddScoped<DbContext, ApplicationDbContext>();
+            services.AddScoped<UnitOfWork, UnitOfWork>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IMasterDataOperations, MasterDataOperations>();
-            services.AddAutoMapper(typeof(MappingProfile));
 
             services.AddMemoryCache();
             services.AddScoped<INavigationCacheOperations, NavigationCacheOperations>();
 
-            services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
+            services.AddScoped<IMasterDataOperations, MasterDataOperations>();
+            services.AddAutoMapper(typeof(ApplicationDbContext));
+
+            services.AddDistributedMemoryCache();
+            services.AddSession();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             return services;
         }

@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ASC.Utilities\ASC.Utilities.csproj" />
     <ProjectReference Include="..\ASC.WebHuyThuanPhuoc\ASC.WebHuyThuanPhuoc.csproj" />
   </ItemGroup>
 

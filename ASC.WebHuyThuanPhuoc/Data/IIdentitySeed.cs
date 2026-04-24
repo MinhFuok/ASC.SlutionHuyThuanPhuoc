@@ -1,8 +1,8 @@
-﻿using ASC.WebHuyThuanPhuoc.Configuration;
+using ASC.WebHuyThuanPhuoc.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
-namespace ASC.Web.Data
+namespace ASC.WebHuyThuanPhuoc.Data
 {
     public interface IIdentitySeed
     {

@@ -15,66 +15,44 @@ namespace ASC.Business
 
         public async Task<List<MasterDataKey>> GetAllMasterKeysAsync()
         {
-            var masterKeys = await _unitOfWork.Repository<MasterDataKey>().FindAllAsync();
-
-            return masterKeys
-                .Where(key => !key.IsDeleted)
-                .OrderBy(key => key.Name)
-                .ToList();
+            var masterkeys = await _unitOfWork.Repository<MasterDataKey>().FindAllAsync();
+            return masterkeys.ToList();
         }
 
-        public async Task<List<MasterDataKey>> GetMasterKeyByNameAsync(string name)
+        public async Task<List<MasterDataKey>> GetMasterKeysByNameAsync(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return new List<MasterDataKey>();
-            }
-
-            var masterKeys = await _unitOfWork.Repository<MasterDataKey>().FindAllByPartitionKeyAsync(name.Trim());
-
-            return masterKeys
-                .Where(key => !key.IsDeleted)
-                .OrderBy(key => key.Name)
-                .ToList();
+            var masterkeys = await _unitOfWork.Repository<MasterDataKey>().FindAllByPartitionKeyAsync(name);
+            return masterkeys.ToList();
         }
 
         public async Task<bool> InsertMasterKeyAsync(MasterDataKey key)
         {
-            key.PartitionKey = Normalize(key.PartitionKey, key.Name);
-            key.RowKey = Normalize(key.RowKey, Guid.NewGuid().ToString());
-            key.Name = Normalize(key.Name, key.PartitionKey);
-            EnsureAuditValues(key);
-
-            if ((await GetMasterKeyByNameAsync(key.PartitionKey)).Any())
+            using (_unitOfWork)
             {
-                return false;
+                await _unitOfWork.Repository<MasterDataKey>().AddAsync(key);
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            await _unitOfWork.Repository<MasterDataKey>().AddAsync(key);
-            _unitOfWork.CommitTransaction();
-
-            return true;
         }
 
         public async Task<bool> UpdateMasterKeyAsync(string originalPartitionKey, MasterDataKey key)
         {
-            var masterKey = await _unitOfWork
-                .Repository<MasterDataKey>()
-                .FindAsync(originalPartitionKey, key.RowKey);
-
-            if (masterKey == null)
+            using (_unitOfWork)
             {
-                return false;
+                var masterkey = await _unitOfWork.Repository<MasterDataKey>().FindAsync(originalPartitionKey, key.RowKey);
+                if (masterkey == null)
+                {
+                    return false;
+                }
+
+                masterkey.PartitionKey = key.PartitionKey;
+                masterkey.Name = key.Name;
+                masterkey.IsActive = key.IsActive;
+                masterkey.UpdatedBy = key.UpdatedBy;
+                _unitOfWork.Repository<MasterDataKey>().Update(masterkey);
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            masterKey.Name = Normalize(key.Name, masterKey.Name);
-            masterKey.IsActive = key.IsActive;
-            masterKey.UpdatedBy = Normalize(key.UpdatedBy, masterKey.UpdatedBy);
-
-            _unitOfWork.Repository<MasterDataKey>().Update(masterKey);
-            _unitOfWork.CommitTransaction();
-
-            return true;
         }
 
         public async Task<List<MasterDataValue>> GetAllMasterValuesByKeyAsync(string key)
@@ -84,54 +62,30 @@ namespace ASC.Business
                 return await GetAllMasterValuesAsync();
             }
 
-            var masterValues = await _unitOfWork
-                .Repository<MasterDataValue>()
-                .FindAllByPartitionKeyAsync(key.Trim());
-
-            return masterValues
-                .Where(value => !value.IsDeleted)
-                .OrderBy(value => value.PartitionKey)
-                .ThenBy(value => value.Name)
-                .ToList();
+            var mastervalues = await _unitOfWork.Repository<MasterDataValue>().FindAllByPartitionKeyAsync(key);
+            return mastervalues.ToList();
         }
 
         public async Task<List<MasterDataValue>> GetAllMasterValuesAsync()
         {
-            var masterValues = await _unitOfWork.Repository<MasterDataValue>().FindAllAsync();
-
-            return masterValues
-                .Where(value => !value.IsDeleted)
-                .OrderBy(value => value.PartitionKey)
-                .ThenBy(value => value.Name)
-                .ToList();
+            var mastervalues = await _unitOfWork.Repository<MasterDataValue>().FindAllAsync();
+            return mastervalues.ToList();
         }
 
         public async Task<MasterDataValue?> GetMasterValueByNameAsync(string key, string name)
         {
-            var masterValues = await GetAllMasterValuesByKeyAsync(key);
-
-            return masterValues.FirstOrDefault(value =>
-                string.Equals(value.Name, name?.Trim(), StringComparison.OrdinalIgnoreCase));
+            var mastervalues = await _unitOfWork.Repository<MasterDataValue>().FindAllByPartitionKeyAsync(key);
+            return mastervalues.SingleOrDefault(p => p.Name == name);
         }
 
         public async Task<bool> InsertMasterValueAsync(MasterDataValue value)
         {
-            value.PartitionKey = Normalize(value.PartitionKey, string.Empty);
-            value.RowKey = Normalize(value.RowKey, Guid.NewGuid().ToString());
-            value.Name = Normalize(value.Name, string.Empty);
-            EnsureAuditValues(value);
-
-            if (string.IsNullOrWhiteSpace(value.PartitionKey) ||
-                string.IsNullOrWhiteSpace(value.Name) ||
-                await GetMasterValueByNameAsync(value.PartitionKey, value.Name) != null)
+            using (_unitOfWork)
             {
-                return false;
+                await _unitOfWork.Repository<MasterDataValue>().AddAsync(value);
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            await _unitOfWork.Repository<MasterDataValue>().AddAsync(value);
-            _unitOfWork.CommitTransaction();
-
-            return true;
         }
 
         public async Task<bool> UpdateMasterValueAsync(
@@ -139,99 +93,62 @@ namespace ASC.Business
             string originalRowKey,
             MasterDataValue value)
         {
-            var masterValue = await _unitOfWork
-                .Repository<MasterDataValue>()
-                .FindAsync(originalPartitionKey, originalRowKey);
-
-            if (masterValue == null)
+            using (_unitOfWork)
             {
-                return false;
+                var mastervalue = await _unitOfWork.Repository<MasterDataValue>().FindAsync(originalPartitionKey, originalRowKey);
+                if (mastervalue == null)
+                {
+                    return false;
+                }
+
+                mastervalue.PartitionKey = value.PartitionKey;
+                mastervalue.RowKey = value.RowKey;
+                mastervalue.Name = value.Name;
+                mastervalue.IsActive = value.IsActive;
+                mastervalue.UpdatedBy = value.UpdatedBy;
+                _unitOfWork.Repository<MasterDataValue>().Update(mastervalue);
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            var newPartitionKey = Normalize(value.PartitionKey, masterValue.PartitionKey);
-            var newName = Normalize(value.Name, masterValue.Name);
-            var duplicate = await GetMasterValueByNameAsync(newPartitionKey, newName);
-            if (duplicate != null &&
-                (!string.Equals(duplicate.PartitionKey, masterValue.PartitionKey, StringComparison.Ordinal) ||
-                 !string.Equals(duplicate.RowKey, masterValue.RowKey, StringComparison.Ordinal)))
-            {
-                return false;
-            }
-
-            if (!string.Equals(masterValue.PartitionKey, newPartitionKey, StringComparison.Ordinal))
-            {
-                _unitOfWork.Repository<MasterDataValue>().Delete(masterValue);
-
-                value.PartitionKey = newPartitionKey;
-                value.RowKey = Normalize(value.RowKey, originalRowKey);
-                value.Name = newName;
-                value.CreatedBy = Normalize(masterValue.CreatedBy, value.UpdatedBy);
-                value.UpdatedBy = Normalize(value.UpdatedBy, masterValue.UpdatedBy);
-
-                await _unitOfWork.Repository<MasterDataValue>().AddAsync(value);
-            }
-            else
-            {
-                masterValue.Name = newName;
-                masterValue.IsActive = value.IsActive;
-                masterValue.UpdatedBy = Normalize(value.UpdatedBy, masterValue.UpdatedBy);
-                _unitOfWork.Repository<MasterDataValue>().Update(masterValue);
-            }
-
-            _unitOfWork.CommitTransaction();
-
-            return true;
         }
 
         public async Task<bool> UploadAllMasterDataAsync(List<MasterDataValue> values)
         {
-            foreach (var value in values.Where(value =>
-                         !string.IsNullOrWhiteSpace(value.PartitionKey) &&
-                         !string.IsNullOrWhiteSpace(value.Name)))
+            using (_unitOfWork)
             {
-                value.PartitionKey = value.PartitionKey.Trim();
-                value.Name = value.Name.Trim();
-                EnsureAuditValues(value);
-
-                if (!(await GetMasterKeyByNameAsync(value.PartitionKey)).Any())
+                foreach (var value in values)
                 {
-                    await InsertMasterKeyAsync(new MasterDataKey
+                    var masterkey = await GetMasterKeysByNameAsync(value.PartitionKey);
+                    if (!masterkey.Any())
                     {
-                        PartitionKey = value.PartitionKey,
-                        RowKey = Guid.NewGuid().ToString(),
-                        Name = value.PartitionKey,
-                        IsActive = true,
-                        CreatedBy = value.CreatedBy,
-                        UpdatedBy = value.UpdatedBy
-                    });
+                        await _unitOfWork.Repository<MasterDataKey>().AddAsync(new MasterDataKey
+                        {
+                            RowKey = Guid.NewGuid().ToString(),
+                            PartitionKey = value.PartitionKey,
+                            Name = value.PartitionKey,
+                            IsActive = true,
+                            CreatedBy = value.CreatedBy,
+                            UpdatedBy = value.UpdatedBy
+                        });
+                    }
+
+                    var mastervalue = await GetMasterValueByNameAsync(value.PartitionKey, value.Name);
+                    if (mastervalue == null)
+                    {
+                        await _unitOfWork.Repository<MasterDataValue>().AddAsync(value);
+                    }
+                    else
+                    {
+                        mastervalue.Name = value.Name;
+                        mastervalue.IsActive = value.IsActive;
+                        mastervalue.UpdatedBy = value.UpdatedBy;
+                        _unitOfWork.Repository<MasterDataValue>().Update(mastervalue);
+                    }
                 }
 
-                var existingValue = await GetMasterValueByNameAsync(value.PartitionKey, value.Name);
-                if (existingValue == null)
-                {
-                    value.RowKey = Guid.NewGuid().ToString();
-                    await InsertMasterValueAsync(value);
-                }
-                else
-                {
-                    existingValue.IsActive = value.IsActive;
-                    existingValue.UpdatedBy = value.UpdatedBy;
-                    await UpdateMasterValueAsync(existingValue.PartitionKey, existingValue.RowKey, existingValue);
-                }
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            return true;
-        }
-
-        private static void EnsureAuditValues(ASC.Model.BaseTypes.BaseEntity entity)
-        {
-            entity.CreatedBy = Normalize(entity.CreatedBy, "system");
-            entity.UpdatedBy = Normalize(entity.UpdatedBy, entity.CreatedBy);
-        }
-
-        private static string Normalize(string? value, string fallback)
-        {
-            return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
         }
     }
 }

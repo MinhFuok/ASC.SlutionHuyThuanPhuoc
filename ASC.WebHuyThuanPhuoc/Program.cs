@@ -1,15 +1,14 @@
-using ASC.Web.Data;
 using ASC.WebHuyThuanPhuoc.Configuration;
-using ASC.WebHuyThuanPhuoc.Operations;
+using ASC.WebHuyThuanPhuoc.Data;
+using ASC.WebHuyThuanPhuoc.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
-
-builder.Services.AddMyDependencyGroup(builder.Configuration);
+builder.Services
+    .AddConfig(builder.Configuration)
+    .AddMyDependencyGroup();
 
 var app = builder.Build();
 

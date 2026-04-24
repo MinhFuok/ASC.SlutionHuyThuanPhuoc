@@ -2,10 +2,9 @@ namespace ASC.Utilities
 {
     public class CurrentUser
     {
-        public string? UserId { get; set; }
-        public string? UserName { get; set; }
-        public string? Email { get; set; }
-        public string? Role { get; set; }
-        public bool IsAuthenticated { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public string[] Roles { get; set; } = Array.Empty<string>();
     }
 }
