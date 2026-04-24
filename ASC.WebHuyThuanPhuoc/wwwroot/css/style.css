@@ -70,6 +70,10 @@ footer.page-footer {
   margin: 0;
 }
 
+body > footer.page-footer {
+  margin-top: auto;
+}
+
 /* Removes padding */
 .padding-0px {
     padding: 0px !important;
@@ -89,6 +93,10 @@ footer.page-footer {
 /* Adjusting padding to display Side Nav */
 header.secureLayout, main.secureLayout, footer.secureLayout {
     padding-left: 300px;
+}
+
+main.secureLayout {
+    flex: 1 0 auto;
 }
 
 @media only screen and (max-width : 992px) {
