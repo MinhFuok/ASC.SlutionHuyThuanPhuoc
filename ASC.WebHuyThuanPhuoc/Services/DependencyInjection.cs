@@ -53,11 +53,18 @@ namespace ASC.WebHuyThuanPhuoc.Services
                     });
             }
 
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = config.GetSection("CacheSettings:CacheConnectionString").Value;
+                options.InstanceName = config.GetSection("CacheSettings:CacheInstance").Value;
+            });
+
             return services;
         }
 
         public static IServiceCollection AddMyDependencyGroup(this IServiceCollection services)
         {
+            services.AddScoped<IMasterDataCacheOperations, MasterDataCacheOperations>();
             services.AddControllersWithViews();
             services.AddRazorPages();
 
