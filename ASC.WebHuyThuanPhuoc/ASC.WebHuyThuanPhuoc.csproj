@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Areas\Identity\Data\" />
     <Folder Include="Areas\ServiceRequests\Data\" />
-    <Folder Include="Areas\ServiceRequests\Models\" />
     <Folder Include="wwwroot\fonts\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>

@@ -1,0 +1,92 @@
+﻿@model ASC.WebHuyThuanPhuoc.Areas.ServiceRequests.Models.NewServiceRequestViewModel
+@using ASC.Model.Models
+
+@{
+    Layout = "_SecureLayout";
+}
+
+<div class="row padding-top-20px padding-left-20px padding-right-20px">
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>New Service Request</h5>
+        </div>
+
+        <div class="divider"></div>
+
+        <form class="col s12"
+              asp-controller="ServiceRequest"
+              asp-action="ServiceRequest"
+              method="post">
+
+            <div class="row">
+                <div class="input-field col s12 m3">
+                    <select asp-for="VehicleName" class="validate" required="required">
+                        <option value="" disabled selected>Select a vehicle</option>
+                        @foreach (var item in (List<MasterDataValue>)ViewBag.VehicleNames)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    </select>
+                    <label asp-for="VehicleName"></label>
+                    <span asp-validation-for="VehicleName" class="red-text"></span>
+                </div>
+
+                <div class="input-field col s12 m3">
+                    <select asp-for="VehicleType" class="validate" required="required">
+                        <option value="" disabled selected>Select a type</option>
+                        @foreach (var item in (List<MasterDataValue>)ViewBag.VehicleTypes)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    </select>
+                    <label asp-for="VehicleType"></label>
+                    <span asp-validation-for="VehicleType" class="red-text"></span>
+                </div>
+
+                <div class="input-field col s12 m3">
+                    <input asp-for="RequestedDate" class="datepicker" type="text" />
+                    <label asp-for="RequestedDate"></label>
+                    <span asp-validation-for="RequestedDate" class="red-text"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea asp-for="RequestedServices" class="materialize-textarea validate"></textarea>
+                    <label asp-for="RequestedServices"></label>
+                    <span asp-validation-for="RequestedServices" class="red-text"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12 right-align">
+                    <button class="btn waves-effect waves-light" type="submit" name="action">
+                        Create
+                        <i class="material-icons right">send</i>
+                    </button>
+
+                    <button class="btn waves-effect waves-light red lighten-1" type="reset" name="action">
+                        Reset
+                    </button>
+                </div>
+
+                <div class="row col s12 right-align" asp-validation-summary="All"></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('select').formSelect();
+
+            $('.datepicker').datepicker({
+                format: 'dd/mm/yyyy'
+            });
+
+            $('textarea#RequestedServices').characterCounter();
+        });
+    </script>
+}
