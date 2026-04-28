@@ -52,6 +52,14 @@ namespace ASC.WebHuyThuanPhuoc.Areas.ServiceRequests.Controllers
             serviceRequest.RowKey = Guid.NewGuid().ToString();
             serviceRequest.RequestedDate = request.RequestedDate;
             serviceRequest.Status = Status.New.ToString();
+            serviceRequest.ServiceEngineer = string.Empty;
+
+            // Audit fields
+            serviceRequest.IsDeleted = false;
+            serviceRequest.CreatedDate = DateTime.Now;
+            serviceRequest.UpdatedDate = DateTime.Now;
+            serviceRequest.CreatedBy = HttpContext.User.GetCurrentUserDetails().Email;
+            serviceRequest.UpdatedBy = HttpContext.User.GetCurrentUserDetails().Email;
 
             await _serviceRequestOperations.CreateServiceRequestAsync(serviceRequest);
             return RedirectToAction("Dashboard", "Dashboard", new { Area = "ServiceRequests" });
