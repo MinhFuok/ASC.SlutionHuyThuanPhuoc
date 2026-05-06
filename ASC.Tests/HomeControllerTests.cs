@@ -33,7 +33,7 @@ namespace ASC.Tests
             var result = controller.Index() as ViewResult;
 
             Assert.NotNull(result);
-            Assert.NotNull(result.Model);
+            Assert.Null(result.ViewData.Model);
         }
 
         [Fact]

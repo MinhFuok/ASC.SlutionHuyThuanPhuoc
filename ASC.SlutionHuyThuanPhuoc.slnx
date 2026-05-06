@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".travis.yml" />
+  </Folder>
   <Project Path="ASC.Business/ASC.Business.csproj" Id="ef16ecf8-5ce5-47b3-8116-8bbb72bce5e3" />
   <Project Path="ASC.DataAccess/ASC.DataAccess.csproj" Id="faceb5a1-4d77-4cb7-b57c-786ce1f07277" />
   <Project Path="ASC.Model/ASC.Model.csproj" Id="201831e6-4748-41e5-a5dd-ddcd97a57053" />

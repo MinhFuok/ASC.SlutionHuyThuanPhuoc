@@ -1,0 +1,18 @@
+language: csharp
+mono: none
+dotnet: 8.0
+
+install:
+  - dotnet restore ./ASC.WebHuyThuanPhuoc/ASC.WebHuyThuanPhuoc.csproj
+  - dotnet restore ./ASC.Tests/ASC.Tests.csproj
+
+script:
+  - dotnet build ./ASC.WebHuyThuanPhuoc/ASC.WebHuyThuanPhuoc.csproj --configuration Release --no-restore
+  - dotnet test ./ASC.Tests/ASC.Tests.csproj --configuration Release --no-restore
+
+notifications:
+  email:
+    recipients:
+      - 2324802010236@student.tdmu.edu.vn
+    on_success: always
+    on_failure: always
