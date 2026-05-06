@@ -9,6 +9,9 @@ namespace ASC.WebHuyThuanPhuoc.Areas.ServiceRequests.Models
         {
             CreateMap<ServiceRequest, NewServiceRequestViewModel>();
             CreateMap<NewServiceRequestViewModel, ServiceRequest>();
+
+            CreateMap<ServiceRequest, UpdateServiceRequestViewModel>();
+            CreateMap<UpdateServiceRequestViewModel, ServiceRequest>();
         }
     }
 }

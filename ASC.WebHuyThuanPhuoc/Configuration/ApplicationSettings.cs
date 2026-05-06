@@ -18,5 +18,9 @@
         public int SMTPPort { get; set; }
         public string SMTPAccount { get; set; } = string.Empty;
         public string SMTPPassword { get; set; } = string.Empty;
+
+        public string TwilioAccountSID { get; set; } = string.Empty;
+        public string TwilioAuthToken { get; set; } = string.Empty;
+        public string TwilioPhoneNumber { get; set; } = string.Empty;
     }
 }

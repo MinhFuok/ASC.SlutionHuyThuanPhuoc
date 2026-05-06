@@ -54,5 +54,20 @@ namespace ASC.Business
             var serviceRequests = await _unitOfWork.Repository<ServiceRequest>().FindAllByQuery(query);
             return serviceRequests.ToList();
         }
+        public async Task<ServiceRequest?> GetServiceRequestByRowKey(string id)
+        {
+            var serviceRequests = await _unitOfWork.Repository<ServiceRequest>()
+                .FindAllByQuery(p => p.RowKey == id && !p.IsDeleted);
+
+            return serviceRequests.FirstOrDefault();
+        }
+
+        public Task<ServiceRequest> UpdateServiceRequestAsync(ServiceRequest request)
+        {
+            _unitOfWork.Repository<ServiceRequest>().Update(request);
+            _unitOfWork.CommitTransaction();
+
+            return Task.FromResult(request);
+        }
     }
 }

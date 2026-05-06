@@ -1,13 +1,15 @@
-    using ASC.Business;
-    using ASC.Business.Interfaces;
-    using ASC.DataAccess;
-    using ASC.WebHuyThuanPhuoc.Configuration;
-    using ASC.WebHuyThuanPhuoc.Data;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Identity;
-    using Microsoft.EntityFrameworkCore;
+using ASC.Business;
+using ASC.Business.Interfaces;
+using ASC.DataAccess;
+using ASC.WebHuyThuanPhuoc.Configuration;
+using ASC.WebHuyThuanPhuoc.Data;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using ASC.WebHuyThuanPhuoc.ServiceHub;
+using Microsoft.AspNetCore.SignalR;
 
-    namespace ASC.WebHuyThuanPhuoc.Services
+namespace ASC.WebHuyThuanPhuoc.Services
     {
         public static class DependencyInjection
         {
@@ -87,6 +89,12 @@
                 services.AddSession();
                 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
+                services.AddSignalR();
+                services.AddSingleton<IUserIdProvider, EmailBasedUserIdProvider>();
+
+                services.AddScoped<IServiceRequestMessageOperations, ServiceRequestMessageOperations>();
+                services.AddScoped<IOnlineUsersOperations, OnlineUsersOperations>();
+                services.AddScoped<IPromotionOperations, PromotionOperations>();
                 return services;
             }
     }

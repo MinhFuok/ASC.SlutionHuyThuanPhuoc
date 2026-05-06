@@ -1,0 +1,106 @@
+﻿@model List<ASC.WebHuyThuanPhuoc.Areas.Promotions.Models.PromotionViewModel>
+
+@{
+    Layout = "_SecureLayout";
+    ViewData["Title"] = "All Promotions";
+}
+
+<div class="row"></div>
+
+<div class="row padding-top-20px">
+    <div class="row z-depth-3 white">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>All Promotions</h5>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section padding-10px">
+            <div class="row divPromotions">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var promotion in Model)
+                    {
+                        var style = promotion.PartitionKey == "Discount"
+                        ? "light-green darken-2"
+                        : "light-blue darken-2";
+
+                        <div class="col s12 m5">
+                            <div class="card @style">
+                                <div class="card-content white-text">
+                                    <span class="card-title">@promotion.Header</span>
+                                    <p>@promotion.Content</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col s12">
+                        <p>No active promotions.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="promotionTemplate hide">
+    <div class="col s12 m5">
+        <div class="card {Style}">
+            <div class="card-content white-text">
+                <span class="card-title">{Header}</span>
+                <p>{Content}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            function getValue(obj, camelName, pascalName) {
+                return obj[camelName] || obj[pascalName] || '';
+            }
+
+            function showPromotion(data) {
+                var header = getValue(data, 'header', 'Header');
+                var content = getValue(data, 'content', 'Content');
+                var type = getValue(data, 'partitionKey', 'PartitionKey');
+
+                var promotionTemplate = $('.promotionTemplate').clone().html();
+
+                promotionTemplate = promotionTemplate.replace('{Header}', header);
+                promotionTemplate = promotionTemplate.replace('{Content}', content);
+                promotionTemplate = promotionTemplate.replace('{Style}',
+                    type === 'Discount'
+                        ? 'light-green darken-2'
+                        : 'light-blue darken-2');
+
+                $('.divPromotions').find('p:contains("No active promotions.")').parent().remove();
+                $('.divPromotions').prepend(promotionTemplate);
+
+                M.toast({
+                    html: 'New promotion: ' + header,
+                    classes: 'teal'
+                });
+            }
+
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl('/serviceMessagesHub')
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('publishPromotion', function (data) {
+                showPromotion(data);
+            });
+
+            connection.start().catch(function (err) {
+                console.error(err.toString());
+            });
+        });
+    </script>
+}

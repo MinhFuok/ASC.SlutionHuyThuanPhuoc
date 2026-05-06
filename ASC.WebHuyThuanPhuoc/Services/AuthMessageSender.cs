@@ -3,6 +3,9 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
 
 namespace ASC.WebHuyThuanPhuoc.Services
 {
@@ -43,9 +46,36 @@ namespace ASC.WebHuyThuanPhuoc.Services
             await client.DisconnectAsync(true);
         }
 
-        public Task SendSmsAsync(string number, string message)
+        public async Task SendSmsAsync(string number, string message)
         {
-            return Task.CompletedTask;
+            if (string.IsNullOrWhiteSpace(number) ||
+                string.IsNullOrWhiteSpace(message) ||
+                string.IsNullOrWhiteSpace(_settings.Value.TwilioAccountSID) ||
+                string.IsNullOrWhiteSpace(_settings.Value.TwilioAuthToken) ||
+                string.IsNullOrWhiteSpace(_settings.Value.TwilioPhoneNumber))
+            {
+                return;
+            }
+
+            try
+            {
+                TwilioClient.Init(
+                    _settings.Value.TwilioAccountSID,
+                    _settings.Value.TwilioAuthToken);
+
+                await MessageResource.CreateAsync(
+                    to: new PhoneNumber(number),
+                    from: new PhoneNumber(_settings.Value.TwilioPhoneNumber),
+                    body: message);
+            }
+            catch (Twilio.Exceptions.ApiException ex)
+            {
+                Console.WriteLine($"Twilio SMS error: {ex.Code} - {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SMS error: {ex.Message}");
+            }
         }
     }
 }

@@ -1,0 +1,306 @@
+﻿@model ServiceRequestDetailViewModel
+@using ASC.Model.BaseTypes
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    Layout = "_SecureLayout";
+    ViewData["Title"] = "Service Request Details";
+
+    var serviceEngineerDisabled = !User.IsInRole(Roles.Admin.ToString());
+    var statusDisabled = User.IsInRole(Roles.User.ToString())
+        && Model.ServiceRequest.Status != Status.PendingCustomerApproval.ToString();
+
+    var requestedServicesDisabled = false;
+}
+
+<div class="row">
+    <div class="col s12">
+        <div class="z-depth-3 white">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Service Request Details</h5>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section padding-10px">
+                <form asp-area="ServiceRequests"
+                      asp-controller="ServiceRequest"
+                      asp-action="UpdateServiceRequestDetails"
+                      method="post">
+
+                    <input asp-for="ServiceRequest.RowKey" type="hidden" />
+                    <input asp-for="ServiceRequest.PartitionKey" type="hidden" />
+                    <input asp-for="ServiceRequest.RequestedDate" type="hidden" />
+
+                    @if (serviceEngineerDisabled)
+                    {
+                        <input asp-for="ServiceRequest.ServiceEngineer" type="hidden" />
+                    }
+
+                    @if (statusDisabled)
+                    {
+                        <input asp-for="ServiceRequest.Status" type="hidden" />
+                    }
+
+                    <div class="row">
+                        <div class="input-field col s4">
+                            <select asp-for="ServiceRequest.VehicleName"
+                                    asp-items="@(new SelectList(ViewBag.VehicleNames, "Name", "Name", Model.ServiceRequest.VehicleName))"
+                                    class="validate"
+                                    required="required">
+                                <option value="">Please select one</option>
+                            </select>
+                            <label asp-for="ServiceRequest.VehicleName"></label>
+                        </div>
+
+                        <div class="input-field col s4">
+                            <select asp-for="ServiceRequest.VehicleType"
+                                    asp-items="@(new SelectList(ViewBag.VehicleTypes, "Name", "Name", Model.ServiceRequest.VehicleType))"
+                                    class="validate"
+                                    required="required">
+                                <option value="">Please select one</option>
+                            </select>
+                            <label asp-for="ServiceRequest.VehicleType"></label>
+                        </div>
+
+                        <div class="input-field col s4">
+                            <input asp-for="ServiceRequest.RequestedDate"
+                                   class="datepicker"
+                                   type="text"
+                                   disabled="disabled" />
+                            <label asp-for="ServiceRequest.RequestedDate"></label>
+                        </div>
+
+                        <div class="input-field col s12">
+                            <textarea asp-for="ServiceRequest.RequestedServices"
+                                      class="materialize-textarea validate"
+                                      required="required"
+                                      disabled="@requestedServicesDisabled"></textarea>
+                            <label asp-for="ServiceRequest.RequestedServices"></label>
+                        </div>
+
+                        <div class="input-field col s4">
+                            <select asp-for="ServiceRequest.ServiceEngineer"
+                                    asp-items="@(new SelectList(ViewBag.ServiceEngineers, "Email", "Email", Model.ServiceRequest.ServiceEngineer))"
+                                    class="validate"
+                                    required="required"
+                                    disabled="@serviceEngineerDisabled">
+                                <option value="">Please select one</option>
+                            </select>
+                            <label asp-for="ServiceRequest.ServiceEngineer"></label>
+                        </div>
+
+                        <div class="input-field col s4">
+                            <select asp-for="ServiceRequest.Status"
+                                    asp-items="@(new SelectList(ViewBag.Status, Model.ServiceRequest.Status))"
+                                    class="validate"
+                                    required="required"
+                                    disabled="@statusDisabled">
+                                <option value="">Please select one</option>
+                            </select>
+                            <label asp-for="ServiceRequest.Status"></label>
+                        </div>
+
+                        <div class="input-field col s12 right-align">
+                            <button class="btn waves-effect waves-light btnSubmit"
+                                    type="submit"
+                                    name="action">
+                                Update
+                                <i class="material-icons right">send</i>
+                            </button>
+                        </div>
+
+                        <div class="row col s12 right-align" asp-validation-summary="All"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12">
+        <div class="z-depth-3 white">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Service Request Messages</h5>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section padding-10px">
+                <div class="row">
+                    <div class="col s12 right-align">
+                        <div class="chip">
+                            Customer
+                            <img src="~/images/red_dot.png" data-id="isCu" />
+                        </div>
+
+                        <div class="chip">
+                            Admin
+                            <img src="~/images/red_dot.png" data-id="isAd" />
+                        </div>
+
+                        <div class="chip">
+                            Engineer
+                            <img src="~/images/red_dot.png" data-id="isSe" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col s12">
+                        <ul id="messagesList"
+                            class="collection"
+                            style="height:300px; overflow-y:auto;">
+                            <li class="collection-item noMessages">No Messages.</li>
+                        </ul>
+                    </div>
+
+                    <div class="input-field col s12">
+                        <input type="text" id="txtMessage" />
+                        <label for="txtMessage">Type message here and press enter.</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('select').formSelect();
+
+            $('.datepicker').datepicker({
+                format: 'dd/mm/yyyy',
+                autoClose: true
+            });
+
+            var serviceRequestId = '@Model.ServiceRequest.RowKey';
+
+            function getValue(obj, camelName, pascalName) {
+                return obj[camelName] || obj[pascalName] || '';
+            }
+
+            function addMessage(message) {
+                $('.noMessages').remove();
+
+                var fromDisplayName = getValue(message, 'fromDisplayName', 'FromDisplayName');
+                var fromEmail = getValue(message, 'fromEmail', 'FromEmail');
+                var text = getValue(message, 'message', 'Message');
+                var messageDate = getValue(message, 'messageDate', 'MessageDate');
+
+                var dateText = '';
+
+                if (messageDate) {
+                    dateText = new Date(messageDate).toLocaleString();
+                }
+
+                var sender = fromDisplayName || fromEmail;
+
+                $('#messagesList').append(
+                    '<li class="collection-item">' +
+                        '<b>' + sender + '</b>' +
+                        '<div class="grey-text" style="font-size:12px;">' + dateText + '</div>' +
+                        '<div>' + text + '</div>' +
+                    '</li>'
+                );
+
+                $('#messagesList').scrollTop($('#messagesList')[0].scrollHeight);
+            }
+
+            function addMessagesToList(data) {
+                $('#messagesList').empty();
+
+                if (!data || data.length === 0) {
+                    $('#messagesList').append('<li class="collection-item noMessages">No Messages.</li>');
+                    return;
+                }
+
+                for (var i = data.length - 1; i >= 0; i--) {
+                    addMessage(data[i]);
+                }
+            }
+
+            function updateUserStatus(data) {
+                $('img[data-id="isCu"]').attr('src',
+                    data.isCu ? '/images/green_dot.png' : '/images/red_dot.png');
+
+                $('img[data-id="isAd"]').attr('src',
+                    data.isAd ? '/images/green_dot.png' : '/images/red_dot.png');
+
+                $('img[data-id="isSe"]').attr('src',
+                    data.isSe ? '/images/green_dot.png' : '/images/red_dot.png');
+            }
+
+            $.get('/ServiceRequests/ServiceRequest/ServiceRequestMessages',
+                { serviceRequestId: serviceRequestId },
+                function (data) {
+                    addMessagesToList(data);
+                });
+
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl('/serviceMessagesHub?serviceRequestId=' + encodeURIComponent(serviceRequestId))
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('publishMessage', function (message) {
+                addMessage(message);
+            });
+
+            connection.on('online', function (data) {
+                updateUserStatus(data);
+            });
+
+            connection.on('publishNotification', function (data) {
+                M.toast({
+                    html: 'Service Request Status updated to ' + data.status,
+                    classes: 'teal'
+                });
+            });
+
+            connection.start().catch(function (err) {
+                console.error(err.toString());
+            });
+
+            $('#txtMessage').keypress(function (e) {
+                if (e.which == 13) {
+                    e.preventDefault();
+
+                    var text = $('#txtMessage').val();
+
+                    if (!text || text.trim().length === 0) {
+                        return;
+                    }
+
+                        $.post('/ServiceRequests/ServiceRequest/CreateServiceRequestMessage',
+        {
+            serviceRequestId: serviceRequestId,
+            messageText: text
+        },
+        function (data) {
+            if (data && data.success) {
+                $('#txtMessage').val('');
+            }
+            else {
+                console.log(data);
+
+                M.toast({
+                    html: data && data.error ? data.error : 'Cannot send message.',
+                    classes: 'red'
+                });
+            }
+        });
+                }
+            });
+
+            window.addEventListener('beforeunload', function () {
+                navigator.sendBeacon(
+                    '/ServiceRequests/ServiceRequest/MarkOfflineUser?serviceRequestId='
+                    + encodeURIComponent(serviceRequestId));
+            });
+        });
+    </script>
+}

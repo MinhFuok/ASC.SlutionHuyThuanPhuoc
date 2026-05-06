@@ -17,7 +17,9 @@ namespace ASC.Model.BaseTypes
 
     public enum MasterKeys
     {
-        VehicleName, VehicleType
+        VehicleName,
+        VehicleType,
+        PromotionType
     }
 
     public enum Status

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,16 +7,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\ServiceRequests\Data\**" />
+    <Compile Remove="wwwroot\fonts\**" />
+    <Content Remove="Areas\ServiceRequests\Data\**" />
+    <Content Remove="wwwroot\fonts\**" />
+    <EmbeddedResource Remove="Areas\ServiceRequests\Data\**" />
+    <EmbeddedResource Remove="wwwroot\fonts\**" />
+    <None Remove="Areas\ServiceRequests\Data\**" />
+    <None Remove="wwwroot\fonts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Areas\Identity\Data\" />
-    <Folder Include="Areas\ServiceRequests\Data\" />
-    <Folder Include="wwwroot\fonts\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="EPPlus" Version="5.8.0" />
-    <PackageReference Include="MailKit" Version="4.14.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.25" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.25" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.23" />
@@ -29,6 +38,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
+    <PackageReference Include="Twilio" Version="7.14.7" />
   </ItemGroup>
 
   <ItemGroup>

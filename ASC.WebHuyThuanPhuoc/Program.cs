@@ -3,6 +3,7 @@ using ASC.WebHuyThuanPhuoc.Data;
 using ASC.WebHuyThuanPhuoc.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using ASC.WebHuyThuanPhuoc.ServiceHub;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,10 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapHub<ServiceMessagesHub>("/serviceMessagesHub");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

@@ -97,7 +97,12 @@
                                 }
 
                                 <td>
-                                    <i class="small material-icons view cursor-hand">pageview</i>
+                                    <a asp-area="ServiceRequests"
+                                       asp-controller="ServiceRequest"
+                                       asp-action="ServiceRequestDetails"
+                                       asp-route-id="@serviceRequest.RowKey">
+                                        <i class="small material-icons view cursor-hand">pageview</i>
+                                    </a>
                                 </td>
                             </tr>
                         }
