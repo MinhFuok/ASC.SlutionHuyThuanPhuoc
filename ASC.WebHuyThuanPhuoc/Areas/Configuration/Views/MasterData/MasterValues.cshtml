@@ -244,20 +244,50 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (message) {
-                        $('#uploadProgress').addClass('hide');
+                            success: function (message) {
+            $('#uploadProgress').addClass('hide');
 
-                        if (message.Success) {
-                            window.location.reload();
-                            return;
-                        }
+            var isSuccess = message.success === true || message.Success === true;
+            var isError = message.error === true || message.Error === true;
+            var messageText = message.text || message.Text || '';
 
-                        $('#uploadMessage').text(message.Text || 'Upload failed.');
-                    },
-                    error: function () {
-                        $('#uploadProgress').addClass('hide');
-                        $('#uploadMessage').text('Upload failed.');
-                    }
+            if (isSuccess) {
+                $('#uploadMessage')
+                    .removeClass('red-text')
+                    .addClass('green-text')
+                    .text('Upload completed successfully.');
+
+                setTimeout(function () {
+                    window.location.reload();
+                }, 700);
+
+                return;
+            }
+
+            if (isError) {
+                $('#uploadMessage')
+                    .removeClass('green-text')
+                    .addClass('red-text')
+                    .text(messageText || 'Upload failed.');
+
+                return;
+            }
+
+            $('#uploadMessage')
+                .removeClass('green-text')
+                .addClass('red-text')
+                .text(messageText || 'Upload failed.');
+        },
+        error: function (xhr) {
+            $('#uploadProgress').addClass('hide');
+
+            console.log(xhr);
+
+            $('#uploadMessage')
+                .removeClass('green-text')
+                .addClass('red-text')
+                .text('Upload failed.');
+        }
                 });
             });
 

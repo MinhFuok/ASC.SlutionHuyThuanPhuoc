@@ -1,76 +1,176 @@
-﻿    @{
-        Layout = "_MasterLayout";
+﻿@{
+    Layout = "_MasterLayout";
+}
+
+<style>U
+    main.secureLayout {
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 
-    <header class="secureLayout">
-        <nav class="top-nav blue-grey lighten-1">
-            <div class="nav-wrapper row valign-wrapper">
-                <div class="col s12 valign-wrapper">
-                    <a href="#" data-target="nav-mobile" class="sidenav-trigger">
-                        <i class="material-icons">menu</i>
-                    </a>
-                    <h5><a class="page-title">Automobile Service Center</a></h5>
-                </div>
-            </div>
-        </nav>
+    .secure-content-wrapper {
+        padding: 14px 16px 24px 16px;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
 
-        @await Component.InvokeAsync("LeftNavigation")
+        .secure-content-wrapper .row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 16px;
+        }
 
-        <form id="logout_form" asp-area="Identity" asp-page="/Account/Logout" method="post"></form>
+            .secure-content-wrapper .row .col {
+                box-sizing: border-box;
+            }
 
-        <form id="resetPassword_form" asp-area="Identity" asp-page="/Account/InitiateResetPassword" method="get">
-            <input type="hidden" name="email" value="@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value" />
-        </form>
-    </header>
+        .secure-content-wrapper .z-depth-1,
+        .secure-content-wrapper .z-depth-2,
+        .secure-content-wrapper .z-depth-3,
+        .secure-content-wrapper .card,
+        .secure-content-wrapper .white {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
 
-    <main class="secureLayout">
-        <div class="row margin-bottom-0px">
-            <div class="col s12">
-                @RenderBody()
+        .secure-content-wrapper table {
+            width: 100% !important;
+        }
+
+        .secure-content-wrapper .dataTables_wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            box-sizing: border-box;
+        }
+
+        .secure-content-wrapper input,
+        .secure-content-wrapper textarea,
+        .secure-content-wrapper select {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .secure-content-wrapper .section {
+            box-sizing: border-box;
+            padding: 18px 18px;
+        }
+
+            .secure-content-wrapper .section h5 {
+                margin-left: 0;
+            }
+        .secure-content-wrapper > .row:first-child,
+        .secure-content-wrapper > div:first-child {
+            margin-top: 0;
+        }
+        .secure-content-wrapper .padding-left-10px {
+            padding-left: 18px !important;
+            padding-right: 18px !important;
+            padding-top: 16px !important;
+            padding-bottom: 16px !important;
+        }
+        .secure-content-wrapper .padding-10px {
+            padding: 20px 18px !important;
+        }
+        .secure-content-wrapper .z-depth-3.white {
+            overflow: hidden;
+        }
+        .secure-content-wrapper .right-align {
+            padding-right: 6px;
+        }
+
+    @@media only screen and (max-width: 992px) {
+        .secure-content-wrapper
+
+    {
+        padding: 12px 12px 20px 12px;
+    }
+
+    .secure-content-wrapper .section {
+        padding: 16px 14px;
+    }
+
+    .secure-content-wrapper .padding-left-10px {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .secure-content-wrapper .padding-10px {
+        padding: 16px 14px !important;
+    }
+
+    }
+</style>
+
+<header class="secureLayout">
+    <nav class="top-nav blue-grey lighten-1">
+        <div class="nav-wrapper row valign-wrapper">
+            <div class="col s12 valign-wrapper">
+                <a href="#" data-target="nav-mobile" class="sidenav-trigger">
+                    <i class="material-icons">menu</i>
+                </a>
+                <h5><a class="page-title">Automobile Service Center</a></h5>
             </div>
         </div>
-    </main>
+    </nav>
 
-    <footer class="page-footer blue-grey lighten-1 secureLayout">
-        <div class="container">
-            <div class="row">
-                <div class="col l6 s12">
-                    <h5 class="white-text">About Us</h5>
-                    <p class="grey-text text-lighten-4">
-                        Automobile Service Center is certified Company to perform car services. Our
-                        Workshop operations started in the month of October, 2010.
-                        We primarily focus on providing better services to our customers, and as a
-                        result of the hard work we were awarded as the "Best Service" for the year
-                        2008 and that too within a short period of time.
-                    </p>
-                </div>
-                <div class="col l3 s12">
-                    <h5 class="white-text">Additional Services</h5>
-                    <ul>
-                        <li><a class="white-text" href="#!">Services</a></li>
-                        <li><a class="white-text" href="#!">Finance</a></li>
-                        <li><a class="white-text" href="#!">Used Cars</a></li>
-                        <li><a class="white-text" href="#!">Insurance</a></li>
-                        <li><a class="white-text" href="#!">Driving School</a></li>
-                    </ul>
-                </div>
-                <div class="col l3 s12">
-                    <h5 class="white-text">Connect</h5>
-                    <ul>
-                        <li><a class="white-text" href="#!">Facebook</a></li>
-                        <li><a class="white-text" href="#!">LinkedIn</a></li>
-                        <li><a class="white-text" href="#!">Twitter</a></li>
-                        <li><a class="white-text" href="#!">Youtube</a></li>
-                    </ul>
-                </div>
+    @await Component.InvokeAsync("LeftNavigation")
+
+    <form id="logout_form" asp-area="Identity" asp-page="/Account/Logout" method="post"></form>
+
+    <form id="resetPassword_form" asp-area="Identity" asp-page="/Account/InitiateResetPassword" method="get">
+        <input type="hidden" name="email" value="@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value" />
+    </form>
+</header>
+
+<main class="secureLayout">
+    <div class="secure-content-wrapper">
+        @RenderBody()
+    </div>
+</main>
+
+<footer class="page-footer blue-grey lighten-1 secureLayout">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text">About Us</h5>
+                <p class="grey-text text-lighten-4">
+                    Automobile Service Center is certified Company to perform car services. Our
+                    Workshop operations started in the month of October, 2010.
+                    We primarily focus on providing better services to our customers, and as a
+                    result of the hard work we were awarded as the "Best Service" for the year
+                    2008 and that too within a short period of time.
+                </p>
+            </div>
+            <div class="col l3 s12">
+                <h5 class="white-text">Additional Services</h5>
+                <ul>
+                    <li><a class="white-text" href="#!">Services</a></li>
+                    <li><a class="white-text" href="#!">Finance</a></li>
+                    <li><a class="white-text" href="#!">Used Cars</a></li>
+                    <li><a class="white-text" href="#!">Insurance</a></li>
+                    <li><a class="white-text" href="#!">Driving School</a></li>
+                </ul>
+            </div>
+            <div class="col l3 s12">
+                <h5 class="white-text">Connect</h5>
+                <ul>
+                    <li><a class="white-text" href="#!">Facebook</a></li>
+                    <li><a class="white-text" href="#!">LinkedIn</a></li>
+                    <li><a class="white-text" href="#!">Twitter</a></li>
+                    <li><a class="white-text" href="#!">Youtube</a></li>
+                </ul>
             </div>
         </div>
-        <div class="footer-copyright row margin-bottom-0px">
-            <div class="col s12">
-                Powered by <a class="brown-text text-lighten-3" href="http://materializecss.com">Materialize</a>
-            </div>
+    </div>
+    <div class="footer-copyright row margin-bottom-0px">
+        <div class="col s12">
+            Powered by <a class="brown-text text-lighten-3" href="http://materializecss.com">Materialize</a>
         </div>
-    </footer>
+    </div>
+</footer>
 
 @section Scripts {
     <script type="text/javascript">
